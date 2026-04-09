@@ -1,28 +1,59 @@
 import type { Metadata } from "next";
-import { Sora, JetBrains_Mono, Geist } from "next/font/google";
+import { Sora, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
+import { CanvasBackground } from "@/components/canvas-background";
+import { Toaster } from "@/components/ui/sonner";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
-
+// Sora — primary UI font, matches legacy index.html.
+// Mapped to --font-sans so shadcn/ui components inherit it.
 const sora = Sora({
-  variable: "--font-sora",
+  variable: "--font-sans",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
   display: "swap",
 });
 
+// JetBrains Mono — used in legacy for age range, timer, numbers.
 const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
+  variable: "--font-mono",
   subsets: ["latin"],
   weight: ["400", "600", "700"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Фишинг IQ тест",
+  metadataBase: new URL("https://phishing-iq.vercel.app"),
+  title: {
+    default: "Фишинг IQ тест",
+    template: "%s · Фишинг IQ тест",
+  },
   description:
-    "Монгол хэрэглэгчдийн фишинг имэйл илрүүлэх чадварыг шалгах интерактив тест",
+    "Монгол хэрэглэгчдийн фишинг имэйл илрүүлэх чадварыг шалгах интерактив тест. ШУТИС — Кибер аюулгүй байдлын тэнхим.",
+  applicationName: "Фишинг IQ тест",
+  authors: [{ name: "П.Мөнхсан" }],
+  keywords: [
+    "фишинг",
+    "phishing",
+    "кибер аюулгүй байдал",
+    "cyber security",
+    "IQ тест",
+    "Mongolia",
+    "ШУТИС",
+  ],
+  openGraph: {
+    type: "website",
+    locale: "mn_MN",
+    title: "Фишинг IQ тест",
+    description:
+      "Жинхэнэ имэйл болон фишинг халдлагыг ялган таних чадвараа шалгаарай.",
+    siteName: "Фишинг IQ тест",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Фишинг IQ тест",
+    description:
+      "Жинхэнэ имэйл болон фишинг халдлагыг ялган таних чадвараа шалгаарай.",
+  },
 };
 
 export default function RootLayout({
@@ -33,10 +64,12 @@ export default function RootLayout({
   return (
     <html
       lang="mn"
-      className={cn("h-full", "antialiased", sora.variable, jetbrainsMono.variable, "font-sans", geist.variable)}
+      className={`${sora.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-navy text-text-1">
+      <body className="min-h-full flex flex-col font-sans bg-background text-foreground">
+        <CanvasBackground />
         {children}
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

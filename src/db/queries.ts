@@ -161,6 +161,7 @@ export async function getLeaderboard(limit = 20) {
       testId: tests.id,
       name: users.name,
       score: tests.score,
+      totalQuestions: tests.totalQuestions,
       totalTimeMs: tests.totalTimeMs,
       ageGroup: tests.ageGroup,
       completedAt: tests.completedAt,
