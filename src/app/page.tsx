@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition, type FormEvent } from "react";
+import { useState, useEffect, useTransition, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { AgeGroupSelector } from "@/components/age-group-selector";
@@ -31,6 +31,28 @@ export default function Home() {
   const [submittedName, setSubmittedName] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  // Experiment state: if the user completed a pre-test, this is set.
+  const [experimentState, setExperimentState] = useState<{
+    experimentId: string;
+    ageGroup: AgeGroup;
+    name: string;
+  } | null>(null);
+
+  // Detect returning post-test user on mount
+  useEffect(() => {
+    const stored = localStorage.getItem("phishing-quiz-experiment");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.experimentId && parsed.ageGroup && parsed.name) {
+          setExperimentState(parsed);
+        }
+      } catch {
+        localStorage.removeItem("phishing-quiz-experiment");
+      }
+    }
+  }, []);
+
   function handleNameSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const trimmed = name.trim();
@@ -53,11 +75,17 @@ export default function Home() {
     startTransition(async () => {
       try {
         const userId = getOrCreateUserId();
-        const { testId, questions } = await startQuiz({
+        const { testId, experimentId, questions } = await startQuiz({
           userId,
           name: submittedName,
           ageGroup,
         });
+
+        // Store experiment state so post-test can find the pre-test
+        localStorage.setItem(
+          "phishing-quiz-experiment",
+          JSON.stringify({ experimentId, ageGroup, name: submittedName }),
+        );
 
         const payload: QuizStorage = {
           testId,
@@ -79,6 +107,45 @@ export default function Home() {
         toast.error(`Алдаа: ${message}`);
       }
     });
+  }
+
+  function handlePostTestStart() {
+    if (!experimentState) return;
+    startTransition(async () => {
+      try {
+        const userId = getOrCreateUserId();
+        const { testId, questions } = await startQuiz({
+          userId,
+          name: experimentState.name,
+          ageGroup: experimentState.ageGroup,
+          experimentId: experimentState.experimentId,
+        });
+
+        const payload: QuizStorage = {
+          testId,
+          ageGroup: experimentState.ageGroup,
+          name: experimentState.name,
+          questions,
+        };
+        window.sessionStorage.setItem(
+          `quiz-${testId}`,
+          JSON.stringify(payload),
+        );
+        localStorage.removeItem("phishing-quiz-experiment");
+        setExperimentState(null);
+        router.push(`/quiz/${testId}`);
+      } catch (err) {
+        console.error(err);
+        const message =
+          err instanceof Error ? err.message : "Post-test эхлүүлэхэд алдаа";
+        toast.error(`Алдаа: ${message}`);
+      }
+    });
+  }
+
+  function handleResetExperiment() {
+    localStorage.removeItem("phishing-quiz-experiment");
+    setExperimentState(null);
   }
 
   return (
@@ -135,7 +202,40 @@ export default function Home() {
 
         {/* Login card */}
         <div className="mx-auto mt-10 w-full max-w-xl rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-md sm:p-8">
-          {!submittedName ? (
+          {experimentState ? (
+            <div className="flex flex-col gap-5">
+              <div className="rounded-lg border border-border/60 bg-white/[0.03] px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">
+                📋 <strong className="text-white">Post-test</strong>
+              </div>
+              <div className="text-base text-white">
+                Сайн байна уу,{" "}
+                <span className="font-semibold text-cyan">
+                  {experimentState.name}
+                </span>
+                ! Pre-test дууссан. Одоо Post-test өгнө үү.
+              </div>
+              <div className="rounded-lg border border-blue-2/30 bg-blue-2/5 px-4 py-3 text-sm text-muted-foreground">
+                Ижил асуултууд өөр дарааллаар гарна. Pre-test-ийн тайлбар,
+                зөвлөмжийг санаж хариулаарай.
+              </div>
+              <Button
+                type="button"
+                size="lg"
+                disabled={isPending}
+                onClick={handlePostTestStart}
+                className="h-12 w-full bg-gradient-to-r from-blue to-cyan text-base text-white shadow-[0_8px_24px_rgba(26,108,246,0.35)]"
+              >
+                {isPending ? "Бэлтгэж байна..." : "Post-test эхлүүлэх →"}
+              </Button>
+              <button
+                type="button"
+                onClick={handleResetExperiment}
+                className="text-center text-xs text-muted-foreground hover:text-white"
+              >
+                Шинэ туршилт эхлүүлэх
+              </button>
+            </div>
+          ) : !submittedName ? (
             <form onSubmit={handleNameSubmit} className="flex flex-col gap-4">
               <div className="mb-2 rounded-lg border border-border/60 bg-white/[0.03] px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">
                 📋 <strong className="text-white">Нэвтрэх</strong>
