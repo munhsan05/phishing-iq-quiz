@@ -14,6 +14,10 @@ import { db, questions } from "@/db";
 import {
   upsertUser,
   getQuestionsByAgeGroup,
+  getQuestionsByIds,
+  getPreTestByExperiment,
+  getPostTestByExperiment,
+  getAnswerQuestionIds,
   createTest,
   saveAnswer,
   finishTest,
@@ -123,18 +127,22 @@ function toClientQuestion(q: {
 // ============================================
 
 /**
- * Start a new quiz for the given user + age group.
- * 1. Upsert the user (anonymous per-browser UUID)
- * 2. Fetch questions for the age group
- * 3. Shuffle + slice to the configured length
- * 4. Create the test record
- * 5. Return the test id and the client-safe questions
+ * Start a new quiz.
+ *
+ * Without `experimentId` → creates a **pre-test** with a new experiment.
+ * With `experimentId`    → creates a **post-test** using the same questions
+ *                          as the pre-test, re-shuffled.
  */
 export async function startQuiz(input: {
   userId: string;
   name: string;
   ageGroup: AgeGroup;
-}): Promise<{ testId: string; questions: ClientQuestion[] }> {
+  experimentId?: string;
+}): Promise<{
+  testId: string;
+  experimentId: string;
+  questions: ClientQuestion[];
+}> {
   assertUuid(input.userId);
   assertName(input.name);
   assertAgeGroup(input.ageGroup);
@@ -146,6 +154,40 @@ export async function startQuiz(input: {
   });
   if (!user) throw new Error("UPSERT_USER_FAILED");
 
+  // ── POST-TEST ──
+  if (input.experimentId) {
+    assertUuid(input.experimentId);
+
+    const preTest = await getPreTestByExperiment(input.experimentId);
+    if (!preTest) throw new Error("PRE_TEST_NOT_FOUND");
+    if (!preTest.completedAt) throw new Error("PRE_TEST_NOT_COMPLETED");
+
+    const existingPost = await getPostTestByExperiment(input.experimentId);
+    if (existingPost) throw new Error("POST_TEST_ALREADY_EXISTS");
+
+    // Same questions, re-shuffled
+    const questionIds = await getAnswerQuestionIds(preTest.id);
+    if (questionIds.length === 0) throw new Error("NO_PRE_TEST_ANSWERS");
+    const pool = await getQuestionsByIds(questionIds);
+    const shuffled = cryptoShuffle(pool);
+
+    const test = await createTest({
+      userId: user.id,
+      testType: "post",
+      experimentId: input.experimentId,
+      ageGroup: input.ageGroup,
+      totalQuestions: shuffled.length,
+    });
+    if (!test) throw new Error("CREATE_TEST_FAILED");
+
+    return {
+      testId: test.id,
+      experimentId: input.experimentId,
+      questions: shuffled.map(toClientQuestion),
+    };
+  }
+
+  // ── PRE-TEST ──
   const pool = await getQuestionsByAgeGroup(input.ageGroup);
   if (pool.length === 0) throw new Error("NO_QUESTIONS_FOR_AGE_GROUP");
 
@@ -153,8 +195,12 @@ export async function startQuiz(input: {
   const shuffled = cryptoShuffle(pool);
   const sliced = shuffled.slice(0, Math.min(desired, shuffled.length));
 
+  const experimentId = crypto.randomUUID();
+
   const test = await createTest({
     userId: user.id,
+    testType: "pre",
+    experimentId,
     ageGroup: input.ageGroup,
     totalQuestions: sliced.length,
   });
@@ -162,6 +208,7 @@ export async function startQuiz(input: {
 
   return {
     testId: test.id,
+    experimentId,
     questions: sliced.map(toClientQuestion),
   };
 }
