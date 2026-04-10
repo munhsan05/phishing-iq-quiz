@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { GmailFrame } from "@/components/gmail-frame";
 import { QuestionTimer } from "@/components/question-timer";
 import { submitAnswer, finishQuiz } from "@/app/actions/quiz";
 import type { AgeGroup } from "@/lib/constants";
@@ -29,7 +29,6 @@ type Phase = "question" | "feedback" | "finishing";
  */
 export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
   const router = useRouter();
-  const bodyRef = useRef<HTMLDivElement>(null);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -48,13 +47,6 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
   const current = questions[currentIndex];
   const total = questions.length;
   const isLast = currentIndex === total - 1;
-
-  // Focus the email body when a new question arrives (a11y: announces change).
-  useEffect(() => {
-    if (phase === "question" && bodyRef.current) {
-      bodyRef.current.focus();
-    }
-  }, [currentIndex, phase]);
 
   // Reset per-question start time whenever we land on a new question.
   useEffect(() => {
@@ -198,134 +190,89 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
         />
       </div>
 
-      {/* Email card */}
-      <Card className="overflow-hidden border border-white/10 bg-white p-0 text-[#202124] ring-0">
-        {/* Email header */}
-        <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
-          <div className="flex items-center gap-3">
-            <div
-              aria-hidden="true"
-              className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-slate-200 to-slate-300 text-sm font-bold text-slate-700"
-            >
-              {current.emailFrom.charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="truncate text-sm font-semibold text-slate-900">
-                {current.emailFrom}
-              </div>
-              <div className="truncate text-xs text-slate-500">
-                рүү: оролцогч · яг одоо
-              </div>
-            </div>
-          </div>
-          <div className="mt-3 text-base font-semibold leading-snug text-slate-900">
-            {current.emailSubject}
-          </div>
-        </div>
+      {/* Gmail email frame */}
+      <GmailFrame question={current} />
 
-        {/* URL bar (only if a URL is present) */}
-        {current.emailUrl ? (
-          <div className="border-b border-slate-200 bg-slate-100 px-5 py-2">
-            <div
-              className="group/url inline-flex max-w-full items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1 font-mono text-xs text-slate-700 shadow-sm"
-              title={current.emailUrl}
-            >
-              <span aria-hidden="true">🔒</span>
-              <span className="truncate">{current.emailUrl}</span>
-            </div>
-          </div>
-        ) : null}
-
-        {/* Email body */}
+      {/* Feedback panel — shown after the user answers */}
+      {phase === "feedback" && feedback ? (
         <div
-          ref={bodyRef}
-          tabIndex={-1}
-          className="px-6 py-5 text-sm leading-relaxed text-slate-700 outline-none whitespace-pre-line"
+          className={cn(
+            "rounded-xl border px-4 py-3 text-sm",
+            timedOut
+              ? "border-yellow-300 bg-yellow-50 text-yellow-900"
+              : feedback.isCorrect
+                ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+                : "border-rose-300 bg-rose-50 text-rose-900",
+          )}
+          role="status"
+          aria-live="assertive"
         >
-          {current.emailBody}
-        </div>
-
-        {/* Feedback panel — shown after the user answers */}
-        {phase === "feedback" && feedback ? (
-          <div
-            className={cn(
-              "mx-5 mb-5 rounded-xl border px-4 py-3 text-sm",
-              timedOut
-                ? "border-yellow-300 bg-yellow-50 text-yellow-900"
-                : feedback.isCorrect
-                  ? "border-emerald-300 bg-emerald-50 text-emerald-900"
-                  : "border-rose-300 bg-rose-50 text-rose-900",
-            )}
-            role="status"
-            aria-live="assertive"
-          >
-            <div className="text-base font-bold">
-              {timedOut
-                ? `⏰ Хугацаа дууслаа! — ${feedback.correctIsPhish ? "🎣 Фишинг имэйл байлаа" : "✉️ Жинхэнэ имэйл байлаа"}`
-                : feedback.isCorrect
-                  ? `✅ Зөв! — ${feedback.correctIsPhish ? "🎣 Фишинг имэйл" : "✉️ Жинхэнэ имэйл"}`
-                  : `❌ Буруу! — ${feedback.correctIsPhish ? "🎣 Энэ нь Фишинг имэйл байсан" : "✉️ Энэ нь Жинхэнэ имэйл байсан"}`}
-            </div>
-            <div className="mt-2 text-[0.95em] leading-relaxed opacity-90">
-              <span className="font-semibold">Тайлбар: </span>
-              {feedback.explanation}
-            </div>
-            <div className="mt-2 text-[0.95em] leading-relaxed opacity-90">
-              <span className="font-semibold">Зөвлөмж: </span>
-              {feedback.recommendation}
-            </div>
+          <div className="text-base font-bold">
+            {timedOut
+              ? `⏰ Хугацаа дууслаа! — ${feedback.correctIsPhish ? "🎣 Фишинг имэйл байлаа" : "✉️ Жинхэнэ имэйл байлаа"}`
+              : feedback.isCorrect
+                ? `✅ Зөв! — ${feedback.correctIsPhish ? "🎣 Фишинг имэйл" : "✉️ Жинхэнэ имэйл"}`
+                : `❌ Буруу! — ${feedback.correctIsPhish ? "🎣 Энэ нь Фишинг имэйл байсан" : "✉️ Энэ нь Жинхэнэ имэйл байсан"}`}
           </div>
-        ) : null}
+          <div className="mt-2 text-[0.95em] leading-relaxed opacity-90">
+            <span className="font-semibold">Тайлбар: </span>
+            {feedback.explanation}
+          </div>
+          <div className="mt-2 text-[0.95em] leading-relaxed opacity-90">
+            <span className="font-semibold">Зөвлөмж: </span>
+            {feedback.recommendation}
+          </div>
+        </div>
+      ) : null}
 
-        {/* Action buttons */}
-        <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 p-5 sm:flex-row">
-          {phase === "question" ? (
-            <>
-              <Button
-                type="button"
-                size="lg"
-                variant="destructive"
-                disabled={isSubmitting}
-                onClick={() => handleAnswer(true)}
-                className="h-14 flex-1 text-base font-semibold"
-                aria-keyshortcuts="P"
-              >
-                ⚠️ Фишинг
-                <span className="ml-2 rounded bg-black/10 px-1.5 py-0.5 text-[0.65rem] font-mono">
-                  P
-                </span>
-              </Button>
-              <Button
-                type="button"
-                size="lg"
-                disabled={isSubmitting}
-                onClick={() => handleAnswer(false)}
-                className="h-14 flex-1 bg-emerald-600 text-base font-semibold text-white hover:bg-emerald-700"
-                aria-keyshortcuts="L"
-              >
-                ✅ Жинхэнэ
-                <span className="ml-2 rounded bg-black/20 px-1.5 py-0.5 text-[0.65rem] font-mono">
-                  L
-                </span>
-              </Button>
-            </>
-          ) : (
+      {/* Action buttons */}
+      <div className="flex flex-col gap-3 sm:flex-row">
+        {phase === "question" ? (
+          <>
             <Button
               type="button"
               size="lg"
-              disabled={phase === "finishing"}
-              onClick={handleNext}
-              className="h-14 w-full bg-primary text-base font-semibold text-primary-foreground hover:bg-primary/90"
+              variant="destructive"
+              disabled={isSubmitting}
+              onClick={() => handleAnswer(true)}
+              className="h-14 flex-1 text-base font-semibold"
+              aria-keyshortcuts="P"
             >
-              {phase === "finishing"
-                ? "Тест дуусгаж байна..."
-                : isLast
-                  ? "Үр дүн харах →"
-                  : "Дараагийн асуулт →"}
+              ⚠️ Фишинг
+              <span className="ml-2 rounded bg-black/10 px-1.5 py-0.5 text-[0.65rem] font-mono">
+                P
+              </span>
             </Button>
-          )}
-        </div>
-      </Card>
+            <Button
+              type="button"
+              size="lg"
+              disabled={isSubmitting}
+              onClick={() => handleAnswer(false)}
+              className="h-14 flex-1 bg-emerald-600 text-base font-semibold text-white hover:bg-emerald-700"
+              aria-keyshortcuts="L"
+            >
+              ✅ Жинхэнэ
+              <span className="ml-2 rounded bg-black/20 px-1.5 py-0.5 text-[0.65rem] font-mono">
+                L
+              </span>
+            </Button>
+          </>
+        ) : (
+          <Button
+            type="button"
+            size="lg"
+            disabled={phase === "finishing"}
+            onClick={handleNext}
+            className="h-14 w-full bg-primary text-base font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            {phase === "finishing"
+              ? "Тест дуусгаж байна..."
+              : isLast
+                ? "Үр дүн харах →"
+                : "Дараагийн асуулт →"}
+          </Button>
+        )}
+      </div>
 
       {/* Keyboard hint */}
       <div className="text-center text-xs text-muted-foreground">
