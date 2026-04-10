@@ -36,6 +36,17 @@ export async function EffectivenessTab() {
   const postMean = mean(postScores);
   const tTest = pairedTTest(preScores, postScores);
   const d = cohensD(preScores, postScores);
+
+  // 95% Confidence Interval for mean difference
+  const diffs = pairs.map((p) => p.postPct - p.prePct);
+  const sdDiff = diffs.length > 1
+    ? Math.sqrt(diffs.reduce((sum, d) => sum + (d - (postMean - preMean)) ** 2, 0) / (diffs.length - 1))
+    : 0;
+  const se = diffs.length > 0 ? sdDiff / Math.sqrt(diffs.length) : 0;
+  const tCritical = diffs.length > 30 ? 1.96 : 2.0; // approximate
+  const ciLower = (postMean - preMean) - tCritical * se;
+  const ciUpper = (postMean - preMean) + tCritical * se;
+
   const improved = pairs.filter((p) => p.postPct > p.prePct).length;
   const improvementRate = (improved / pairs.length) * 100;
 
@@ -88,6 +99,7 @@ export async function EffectivenessTab() {
               <StatRow label="Pre-test дундаж" value={`${preMean.toFixed(1)}%`} />
               <StatRow label="Post-test дундаж" value={`${postMean.toFixed(1)}%`} />
               <StatRow label="Ялгаа" value={`${(postMean - preMean) > 0 ? "+" : ""}${(postMean - preMean).toFixed(1)}%`} highlight={postMean > preMean} />
+              <StatRow label="95% CI" value={`[${ciLower.toFixed(1)}%, ${ciUpper.toFixed(1)}%]`} />
               <StatRow label="t-value" value={tTest.tValue.toFixed(3)} />
               <StatRow label="p-value" value={tTest.pValue.toFixed(4)} />
               <StatRow label="p-value тайлбар" value={interpretPValue(tTest.pValue)} highlight={tTest.pValue < 0.05} />
