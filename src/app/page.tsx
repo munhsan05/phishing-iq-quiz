@@ -128,7 +128,7 @@ export default function Home() {
           <div>
             <div className="font-mono text-2xl font-bold text-white">10</div>
             <div className="mt-1 text-[0.65rem] uppercase tracking-wider text-muted-foreground">
-              Асуулт · 20 сек
+              Асуулт · 30 сек
             </div>
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function Home() {
               </Button>
               <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
                 <span>⏱ 10+ асуулт</span>
-                <span>⚡ 20 сек / асуулт</span>
+                <span>⚡ 30 сек / асуулт</span>
                 <span>🔒 Дахин өгөх</span>
               </div>
             </form>
