@@ -211,7 +211,7 @@ export async function getLeaderboard(limit = 20) {
     })
     .from(tests)
     .innerJoin(users, eq(users.id, tests.userId))
-    .where(and(isNotNull(tests.completedAt), eq(tests.testType, "practice")))
+    .where(isNotNull(tests.completedAt))
     .orderBy(desc(tests.score), asc(tests.totalTimeMs))
     .limit(limit);
 }
