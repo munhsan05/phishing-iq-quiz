@@ -24,7 +24,7 @@ export function GmailFrame({ question }: GmailFrameProps) {
         <div className="mx-3 flex-1">
           <div className="flex items-center gap-2 rounded-full bg-[#eaf1fb] px-4 py-1.5 text-sm text-[#5f6368]">
             <span className="text-base">🔍</span>
-            <span>Имэйл хайх</span>
+            <span className="hidden sm:inline">Имэйл хайх</span>
           </div>
         </div>
         <div className="flex items-center gap-2 text-[#5f6368]">
@@ -71,7 +71,7 @@ export function GmailFrame({ question }: GmailFrameProps) {
           </div>
 
           {/* Subject line */}
-          <div className="border-b border-[#f0f0f0] px-6 py-3">
+          <div className="border-b border-[#f0f0f0] px-4 py-3 sm:px-6">
             <h2 className="text-lg font-normal text-[#202124] leading-snug">
               {question.emailSubject}
             </h2>
@@ -83,7 +83,7 @@ export function GmailFrame({ question }: GmailFrameProps) {
           </div>
 
           {/* Sender header */}
-          <div className="flex items-start gap-3 px-6 py-4">
+          <div className="flex items-start gap-3 px-4 py-4 sm:px-6">
             <div
               className="flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
               style={{ backgroundColor: `hsl(${hue}, 55%, 50%)` }}
@@ -114,7 +114,7 @@ export function GmailFrame({ question }: GmailFrameProps) {
           </div>
 
           {/* Email body */}
-          <div className="px-6 pb-5 pl-[4.5rem] text-sm leading-relaxed text-[#3c4043] whitespace-pre-line">
+          <div className="px-4 pb-5 text-sm leading-relaxed text-[#3c4043] whitespace-pre-line sm:px-6 sm:pl-[4.5rem]">
             {question.emailBody}
 
             {question.emailUrl ? (
@@ -127,7 +127,7 @@ export function GmailFrame({ question }: GmailFrameProps) {
           </div>
 
           {/* Reply / Forward footer */}
-          <div className="flex items-center gap-3 border-t border-[#f0f0f0] px-6 py-3 pl-[4.5rem]">
+          <div className="flex items-center gap-3 border-t border-[#f0f0f0] px-4 py-3 sm:px-6 sm:pl-[4.5rem]">
             <button
               type="button"
               disabled

@@ -134,10 +134,10 @@ export default async function ComparisonPage({ params }: PageProps) {
             </div>
 
             {/* Big score comparison */}
-            <div className="mt-8 flex items-center gap-6">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-6">
               <div className="text-center">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Pre-test</div>
-                <div className="font-mono text-5xl font-extrabold text-[#f87171]">
+                <div className="font-mono text-3xl font-extrabold text-[#f87171] sm:text-5xl">
                   {preScore}<span className="text-lg text-muted-foreground">/{total}</span>
                 </div>
                 <div className="text-sm text-muted-foreground">{prePct}%</div>
@@ -145,13 +145,13 @@ export default async function ComparisonPage({ params }: PageProps) {
               <div className="text-3xl text-muted-foreground">→</div>
               <div className="text-center">
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">Post-test</div>
-                <div className="font-mono text-5xl font-extrabold text-[#34d399]">
+                <div className="font-mono text-3xl font-extrabold text-[#34d399] sm:text-5xl">
                   {postScore}<span className="text-lg text-muted-foreground">/{total}</span>
                 </div>
                 <div className="text-sm text-muted-foreground">{postPct}%</div>
               </div>
               <div className={cn(
-                "rounded-xl px-4 py-2 text-center font-mono text-2xl font-bold",
+                "rounded-xl px-3 py-1.5 text-center font-mono text-lg font-bold sm:px-4 sm:py-2 sm:text-2xl",
                 diff > 0 ? "bg-emerald-500/10 text-emerald-400" : diff < 0 ? "bg-red-500/10 text-red-400" : "bg-white/5 text-muted-foreground",
               )}>
                 {diff > 0 ? "+" : ""}{diff}%

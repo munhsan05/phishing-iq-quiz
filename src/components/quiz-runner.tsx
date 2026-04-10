@@ -151,12 +151,12 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       {/* Header: progress + score */}
-      <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-card/60 px-5 py-4 backdrop-blur">
+      <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-card/60 px-3 py-3 backdrop-blur sm:px-5 sm:py-4">
         <div className="flex flex-col gap-1">
           <span className="text-xs uppercase tracking-wider text-muted-foreground">
             Насны бүлэг {ageGroup}
           </span>
-          <span className="font-mono text-lg font-bold text-white">
+          <span className="font-mono text-base font-bold text-white sm:text-lg">
             Асуулт {currentIndex + 1}/{total}
           </span>
         </div>
@@ -164,30 +164,31 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
           <span className="text-xs uppercase tracking-wider text-muted-foreground">
             Оноо
           </span>
-          <span className="font-mono text-2xl font-extrabold text-cyan">
+          <span className="font-mono text-xl font-extrabold text-cyan sm:text-2xl">
             {score}
             <span className="text-base text-muted-foreground">/{total}</span>
           </span>
         </div>
       </div>
 
-      {/* Timer */}
-      <QuestionTimer
-        durationSec={QUIZ_TIME_PER_QUESTION_SEC}
-        onExpire={handleTimerExpire}
-        resetKey={current.id}
-        paused={phase !== "question"}
-      />
-
-      {/* Progress bar across questions */}
-      <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-blue to-cyan transition-all duration-300"
-          style={{
-            width: `${(((currentIndex + (phase === "feedback" ? 1 : 0)) / total) * 100).toFixed(2)}%`,
-          }}
-          aria-hidden="true"
+      {/* Timer + progress (sticky on mobile) */}
+      <div className="sticky top-0 z-20 -mx-4 bg-background/95 px-4 pb-2 pt-2 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:backdrop-blur-none">
+        <QuestionTimer
+          durationSec={QUIZ_TIME_PER_QUESTION_SEC}
+          onExpire={handleTimerExpire}
+          resetKey={current.id}
+          paused={phase !== "question"}
         />
+        {/* Progress bar across questions */}
+        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-blue to-cyan transition-all duration-300"
+            style={{
+              width: `${(((currentIndex + (phase === "feedback" ? 1 : 0)) / total) * 100).toFixed(2)}%`,
+            }}
+            aria-hidden="true"
+          />
+        </div>
       </div>
 
       {/* Gmail email frame */}
