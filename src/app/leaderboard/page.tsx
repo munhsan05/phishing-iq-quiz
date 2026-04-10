@@ -183,7 +183,7 @@ export default async function LeaderboardPage() {
 
               {rest.length === 0 && top3.length > 0 && top3.length < 3 ? (
                 <p className="mt-6 text-center font-mono text-xs text-[var(--color-text-3)]">
-                  // бусад оролцогчдын өгөгдөл байхгүй байна
+                  {/* бусад оролцогчдын өгөгдөл байхгүй байна */}
                 </p>
               ) : null}
             </>

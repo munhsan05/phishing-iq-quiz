@@ -170,7 +170,7 @@ export default async function ComparisonPage({ params }: PageProps) {
         {/* Per-question detail table */}
         <Card className="bg-[var(--color-navy-2)] ring-1 ring-[var(--color-border-1)] p-5 sm:p-6">
           <h2 className="mb-4 font-mono text-xs uppercase tracking-wider text-muted-foreground">
-            // АСУУЛТ ТУСЫН ӨӨРЧЛӨЛТ
+            {/* АСУУЛТ ТУСЫН ӨӨРЧЛӨЛТ */}
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -223,7 +223,7 @@ export default async function ComparisonPage({ params }: PageProps) {
         {/* Statistical analysis */}
         <Card className="bg-[var(--color-navy-2)] ring-1 ring-[var(--color-border-1)] p-5 sm:p-6">
           <h2 className="mb-4 font-mono text-xs uppercase tracking-wider text-muted-foreground">
-            // СТАТИСТИК ШИНЖИЛГЭЭ
+            {/* СТАТИСТИК ШИНЖИЛГЭЭ */}
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

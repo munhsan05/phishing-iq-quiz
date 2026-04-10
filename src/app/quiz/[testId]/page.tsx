@@ -43,6 +43,7 @@ export default function QuizPage({ params }: PageProps) {
     try {
       const raw = window.sessionStorage.getItem(`quiz-${testId}`);
       if (!raw) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setState("missing");
         return;
       }

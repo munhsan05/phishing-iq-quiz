@@ -45,6 +45,7 @@ export default function Home() {
       try {
         const parsed = JSON.parse(stored);
         if (parsed.experimentId && parsed.ageGroup && parsed.name) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setExperimentState(parsed);
         }
       } catch {

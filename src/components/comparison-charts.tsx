@@ -46,7 +46,7 @@ export function ScoreBarChart({ data }: { data: ScoreComparisonData[] }) {
   return (
     <div className="rounded-xl border border-[var(--color-border-1)] bg-[var(--color-navy-2)] p-5">
       <h3 className="mb-4 font-mono text-xs uppercase tracking-wider text-muted-foreground">
-        // ОНОО ХАРЬЦУУЛАЛТ
+        {/* ОНОО ХАРЬЦУУЛАЛТ */}
       </h3>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={data} layout="vertical" barGap={4}>
@@ -89,7 +89,7 @@ export function CategoryRadarChart({ data }: { data: CategoryData[] }) {
   return (
     <div className="rounded-xl border border-[var(--color-border-1)] bg-[var(--color-navy-2)] p-5">
       <h3 className="mb-4 font-mono text-xs uppercase tracking-wider text-muted-foreground">
-        // КАТЕГОРИ ТУСЫН САЙЖРАЛ
+        {/* КАТЕГОРИ ТУСЫН САЙЖРАЛ */}
       </h3>
       <ResponsiveContainer width="100%" height={320}>
         <RadarChart data={labeled} cx="50%" cy="50%" outerRadius="70%">
@@ -113,7 +113,7 @@ export function TimeBarChart({ data }: { data: TimeComparisonData[] }) {
   return (
     <div className="rounded-xl border border-[var(--color-border-1)] bg-[var(--color-navy-2)] p-5">
       <h3 className="mb-4 font-mono text-xs uppercase tracking-wider text-muted-foreground">
-        // ХАРИУЛАХ ХУГАЦАА (СЕКУНД)
+        {/* ХАРИУЛАХ ХУГАЦАА (СЕКУНД) */}
       </h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data} barGap={2}>

@@ -157,7 +157,7 @@ export default async function ResultPage({ params }: PageProps) {
           <Card className="bg-[var(--color-navy-2)] ring-1 ring-[var(--color-border-1)] p-5 sm:p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
-                // ТУРШИЛТЫН ДЭЛГЭРЭНГҮЙ ҮР ДҮН
+                {/* ТУРШИЛТЫН ДЭЛГЭРЭНГҮЙ ҮР ДҮН */}
               </h2>
               <span className="text-xs text-muted-foreground">
                 {rows.length} асуулт
