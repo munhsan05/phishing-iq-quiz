@@ -14,7 +14,7 @@
  */
 import "dotenv/config";
 import { db } from "./index";
-import { questions, type NewQuestion } from "./schema";
+import { questions, answers, tests, type NewQuestion } from "./schema";
 
 const QUESTIONS: NewQuestion[] = [
   // ============================================
@@ -802,6 +802,9 @@ async function main() {
   console.log(`Seeding ${QUESTIONS.length} questions...`);
 
   // Reset existing rows so reseeding is idempotent.
+  // Must delete in FK order: answers → tests → questions.
+  await db.delete(answers);
+  await db.delete(tests);
   await db.delete(questions);
 
   await db.insert(questions).values(QUESTIONS);
