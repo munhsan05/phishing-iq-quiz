@@ -215,3 +215,45 @@ export async function getLeaderboard(limit = 20) {
     .orderBy(desc(tests.score), asc(tests.totalTimeMs))
     .limit(limit);
 }
+
+// ============================================
+// COMPARISON
+// ============================================
+
+/** Full experiment data for comparison page: both tests + all answers + questions. */
+export async function getExperimentComparison(experimentId: string) {
+  const experimentTests = await db
+    .select({ test: tests, user: users })
+    .from(tests)
+    .innerJoin(users, eq(users.id, tests.userId))
+    .where(eq(tests.experimentId, experimentId))
+    .orderBy(asc(tests.startedAt));
+
+  const preRow = experimentTests.find((r) => r.test.testType === "pre");
+  const postRow = experimentTests.find((r) => r.test.testType === "post");
+
+  if (!preRow || !postRow) return null;
+  if (!preRow.test.completedAt || !postRow.test.completedAt) return null;
+
+  const preAnswers = await db
+    .select({ answer: answers, question: questions })
+    .from(answers)
+    .innerJoin(questions, eq(questions.id, answers.questionId))
+    .where(eq(answers.testId, preRow.test.id))
+    .orderBy(asc(questions.id));
+
+  const postAnswers = await db
+    .select({ answer: answers, question: questions })
+    .from(answers)
+    .innerJoin(questions, eq(questions.id, answers.questionId))
+    .where(eq(answers.testId, postRow.test.id))
+    .orderBy(asc(questions.id));
+
+  return {
+    user: preRow.user,
+    preTest: preRow.test,
+    postTest: postRow.test,
+    preAnswers,
+    postAnswers,
+  };
+}
