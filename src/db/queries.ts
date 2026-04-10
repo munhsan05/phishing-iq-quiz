@@ -1,5 +1,5 @@
 import { db, users, questions, tests, answers } from "./index";
-import { eq, desc, asc, and, isNotNull } from "drizzle-orm";
+import { eq, desc, asc, and, isNotNull, inArray } from "drizzle-orm";
 import type { NewUser, NewTest, NewAnswer } from "./schema";
 
 // ============================================
@@ -85,6 +85,49 @@ export async function createTest(input: {
     } as NewTest)
     .returning();
   return inserted[0];
+}
+
+// ============================================
+// EXPERIMENT OPERATIONS
+// ============================================
+
+/** Get the pre-test for a given experiment. */
+export async function getPreTestByExperiment(experimentId: string) {
+  const rows = await db
+    .select()
+    .from(tests)
+    .where(
+      and(eq(tests.experimentId, experimentId), eq(tests.testType, "pre")),
+    )
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+/** Get the post-test for a given experiment (if exists). */
+export async function getPostTestByExperiment(experimentId: string) {
+  const rows = await db
+    .select()
+    .from(tests)
+    .where(
+      and(eq(tests.experimentId, experimentId), eq(tests.testType, "post")),
+    )
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+/** Get all answer question IDs for a test (for re-using same questions in post-test). */
+export async function getAnswerQuestionIds(testId: string) {
+  const rows = await db
+    .select({ questionId: answers.questionId })
+    .from(answers)
+    .where(eq(answers.testId, testId));
+  return rows.map((r) => r.questionId);
+}
+
+/** Fetch questions by an array of IDs. */
+export async function getQuestionsByIds(ids: number[]) {
+  if (ids.length === 0) return [];
+  return db.select().from(questions).where(inArray(questions.id, ids));
 }
 
 /** Save a single answer. selectedIsPhish is null for timeouts. */
