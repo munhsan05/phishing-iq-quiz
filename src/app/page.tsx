@@ -150,7 +150,7 @@ export default function Home() {
   }
 
   return (
-    <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-16">
+    <main id="main-content" className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-16">
       <div className="w-full max-w-3xl">
         {/* Academic header */}
         <div className="mb-6 text-center text-xs uppercase tracking-[0.2em] text-muted-foreground">

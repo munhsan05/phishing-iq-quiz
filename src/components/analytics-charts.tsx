@@ -83,7 +83,7 @@ export function TrendLineChart({
   title: string;
 }) {
   return (
-    <div className={CARD}>
+    <div className={CARD} role="img" aria-label={`${title} — тестийн тоо болон дундаж оноо`}>
       <h3 className={HEADING}>{title}</h3>
       <ResponsiveContainer width="100%" height={280}>
         <LineChart data={data}>
@@ -107,7 +107,7 @@ export function TrendLineChart({
 
 export function PrePostScatterChart({ data }: { data: PrePostPair[] }) {
   return (
-    <div className={CARD}>
+    <div className={CARD} role="img" aria-label="Pre/Post тестийн оноо тархалт">
       <h3 className={HEADING}>Хэрэглэгч бүрийн ахиц (Pre vs Post)</h3>
       <ResponsiveContainer width="100%" height={300}>
         <ScatterChart>
@@ -147,7 +147,7 @@ export function DifficultyBarChart({ data }: { data: QuestionDifficulty[] }) {
   }));
 
   return (
-    <div className={CARD}>
+    <div className={CARD} role="img" aria-label="Асуулт тус бүрийн зөв хариултын хувь бар график">
       <h3 className={HEADING}>Асуулт тус бүрийн зөв хариултын хувь</h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={truncated}>
@@ -192,7 +192,7 @@ export function ResponseTimeBarChart({ data }: { data: ResponseTimeData[] }) {
   }));
 
   return (
-    <div className={CARD}>
+    <div className={CARD} role="img" aria-label="Асуулт тус бүрийн дундаж хариулах хугацаа бар график">
       <h3 className={HEADING}>Асуулт тус бүрийн дундаж хариулах хугацаа</h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={formatted}>
@@ -230,7 +230,7 @@ export function AgeGroupRadarChart({ data }: { data: AgeGroupRadarData[] }) {
   const ageGroups = Object.keys(data[0] ?? {}).filter((k) => k !== "category");
 
   return (
-    <div className={CARD}>
+    <div className={CARD} role="img" aria-label="Насны бүлгийн категори тусын зөв хариулт радар график">
       <h3 className={HEADING}>Насны бүлгийн категори тусын зөв хариулт</h3>
       <ResponsiveContainer width="100%" height={350}>
         <RadarChart data={data} cx="50%" cy="50%" outerRadius="70%">

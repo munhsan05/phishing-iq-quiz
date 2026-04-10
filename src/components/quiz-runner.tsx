@@ -205,8 +205,7 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
                 ? "border-emerald-300 bg-emerald-50 text-emerald-900"
                 : "border-rose-300 bg-rose-50 text-rose-900",
           )}
-          role="status"
-          aria-live="assertive"
+          role="alert"
         >
           <div className="text-base font-bold">
             {timedOut
@@ -276,7 +275,7 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
       </div>
 
       {/* Keyboard hint */}
-      <div className="text-center text-xs text-muted-foreground">
+      <div className="text-center text-xs text-muted-foreground" aria-hidden="true">
         Гарын товчлол:{" "}
         <kbd className="rounded border border-border bg-white/5 px-1.5 py-0.5 font-mono text-[0.65rem]">
           P

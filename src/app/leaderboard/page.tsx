@@ -33,7 +33,7 @@ export default async function LeaderboardPage() {
   const rest = rows.slice(3);
 
   return (
-    <main className="relative z-10 flex flex-1 flex-col items-center px-4 py-10 sm:px-6 sm:py-14">
+    <main id="main-content" className="relative z-10 flex flex-1 flex-col items-center px-4 py-10 sm:px-6 sm:py-14">
       <div className="w-full max-w-4xl space-y-6">
         {/* Header */}
         <div className="text-center">

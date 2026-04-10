@@ -44,7 +44,7 @@ export type TimeComparisonData = {
 
 export function ScoreBarChart({ data }: { data: ScoreComparisonData[] }) {
   return (
-    <div className="rounded-xl border border-[var(--color-border-1)] bg-[var(--color-navy-2)] p-5">
+    <div className="rounded-xl border border-[var(--color-border-1)] bg-[var(--color-navy-2)] p-5" role="img" aria-label="Pre/Post оноо харьцуулалт бар график">
       <h3 className="mb-4 font-mono text-xs uppercase tracking-wider text-muted-foreground">
         {/* ОНОО ХАРЬЦУУЛАЛТ */}
       </h3>
@@ -87,7 +87,7 @@ export function CategoryRadarChart({ data }: { data: CategoryData[] }) {
   }));
 
   return (
-    <div className="rounded-xl border border-[var(--color-border-1)] bg-[var(--color-navy-2)] p-5">
+    <div className="rounded-xl border border-[var(--color-border-1)] bg-[var(--color-navy-2)] p-5" role="img" aria-label="Категори тусын сайжрал радар график">
       <h3 className="mb-4 font-mono text-xs uppercase tracking-wider text-muted-foreground">
         {/* КАТЕГОРИ ТУСЫН САЙЖРАЛ */}
       </h3>
@@ -111,7 +111,7 @@ export function CategoryRadarChart({ data }: { data: CategoryData[] }) {
 
 export function TimeBarChart({ data }: { data: TimeComparisonData[] }) {
   return (
-    <div className="rounded-xl border border-[var(--color-border-1)] bg-[var(--color-navy-2)] p-5">
+    <div className="rounded-xl border border-[var(--color-border-1)] bg-[var(--color-navy-2)] p-5" role="img" aria-label="Хариулах хугацаа харьцуулалт бар график">
       <h3 className="mb-4 font-mono text-xs uppercase tracking-wider text-muted-foreground">
         {/* ХАРИУЛАХ ХУГАЦАА (СЕКУНД) */}
       </h3>

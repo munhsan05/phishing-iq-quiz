@@ -62,7 +62,7 @@ export default async function ResultPage({ params }: PageProps) {
   return (
     <>
       <ConfettiLauncher shouldFire={pct >= 70} />
-      <main className="relative z-10 flex flex-1 flex-col items-center px-4 py-10 sm:px-6 sm:py-14">
+      <main id="main-content" className="relative z-10 flex flex-1 flex-col items-center px-4 py-10 sm:px-6 sm:py-14">
         <div className="w-full max-w-3xl space-y-6">
           {/* Hero card */}
           <Card className="bg-[var(--color-navy-2)] ring-1 ring-[var(--color-border-1)] p-6 sm:p-8">

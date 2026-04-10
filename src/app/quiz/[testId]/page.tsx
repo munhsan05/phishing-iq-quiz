@@ -76,7 +76,7 @@ export default function QuizPage({ params }: PageProps) {
 
   if (state === "loading") {
     return (
-      <main className="relative z-10 flex flex-1 items-center justify-center px-6 py-16">
+      <main id="main-content" className="relative z-10 flex flex-1 items-center justify-center px-6 py-16">
         <div className="text-sm text-muted-foreground">
           Тестийг ачаалж байна...
         </div>
@@ -86,7 +86,7 @@ export default function QuizPage({ params }: PageProps) {
 
   if (state === "missing" || !payload) {
     return (
-      <main className="relative z-10 flex flex-1 items-center justify-center px-6 py-16">
+      <main id="main-content" className="relative z-10 flex flex-1 items-center justify-center px-6 py-16">
         <div className="text-sm text-muted-foreground">
           Тестийн мэдээлэл алга. Эхлэлрүү буцах...
         </div>
@@ -95,7 +95,7 @@ export default function QuizPage({ params }: PageProps) {
   }
 
   return (
-    <main className="relative z-10 flex flex-1 flex-col px-4 py-10 sm:px-6 sm:py-14">
+    <main id="main-content" className="relative z-10 flex flex-1 flex-col px-4 py-10 sm:px-6 sm:py-14">
       <QuizRunner
         testId={payload.testId}
         questions={payload.questions}

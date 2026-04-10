@@ -14,7 +14,11 @@ export function GmailFrame({ question }: GmailFrameProps) {
     .reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-[#dadce0] bg-white shadow-lg">
+    <div
+      className="overflow-hidden rounded-lg border border-[#dadce0] bg-white shadow-lg"
+      role="article"
+      aria-label={`Имэйл: ${question.emailFrom} — ${question.emailSubject}`}
+    >
       {/* Gmail top toolbar */}
       <div className="flex items-center gap-3 border-b border-[#dadce0] bg-[#f6f8fc] px-4 py-2">
         <span className="text-[#5f6368] text-lg">☰</span>
