@@ -1,5 +1,5 @@
 import { db, users, questions, tests, answers } from "./index";
-import { eq, desc, asc, and, isNotNull, inArray } from "drizzle-orm";
+import { eq, desc, asc, and, isNotNull, inArray, count, avg, sql, gte } from "drizzle-orm";
 import type { NewUser, NewTest, NewAnswer } from "./schema";
 
 // ============================================
@@ -255,5 +255,246 @@ export async function getExperimentComparison(experimentId: string) {
     postTest: postRow.test,
     preAnswers,
     postAnswers,
+  };
+}
+
+// ============================================
+// ANALYTICS
+// ============================================
+
+/** Overview stats: total users, tests, avg score, completion rate. */
+export async function getOverviewStats() {
+  const [userRow] = await db.select({ value: count() }).from(users);
+  const [testRow] = await db
+    .select({
+      total: count(),
+      completed: sql<number>`COUNT(${tests.completedAt})`,
+      avgScorePct: sql<number>`COALESCE(AVG(
+        CASE WHEN ${tests.completedAt} IS NOT NULL
+          THEN ${tests.score}::float / NULLIF(${tests.totalQuestions}, 0) * 100
+        END
+      ), 0)`,
+    })
+    .from(tests);
+
+  return {
+    totalUsers: userRow.value,
+    totalTests: testRow.total,
+    completedTests: Number(testRow.completed),
+    completionRate: testRow.total > 0
+      ? (Number(testRow.completed) / testRow.total) * 100
+      : 0,
+    avgScorePercent: Number(testRow.avgScorePct),
+  };
+}
+
+/** Daily test count + avg score for the last N days. */
+export async function getTrendData(days: 7 | 30) {
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+
+  const rows = await db
+    .select({
+      date: sql<string>`TO_CHAR(${tests.startedAt}, 'YYYY-MM-DD')`,
+      testCount: count(),
+      avgScorePct: sql<number>`COALESCE(AVG(
+        CASE WHEN ${tests.completedAt} IS NOT NULL
+          THEN ${tests.score}::float / NULLIF(${tests.totalQuestions}, 0) * 100
+        END
+      ), 0)`,
+    })
+    .from(tests)
+    .where(gte(tests.startedAt, since))
+    .groupBy(sql`TO_CHAR(${tests.startedAt}, 'YYYY-MM-DD')`)
+    .orderBy(sql`TO_CHAR(${tests.startedAt}, 'YYYY-MM-DD')`);
+
+  return rows.map((r) => ({
+    date: r.date,
+    testCount: r.testCount,
+    avgScorePct: Number(r.avgScorePct),
+  }));
+}
+
+/** All completed experiment pairs for pre/post analysis. */
+export async function getPrePostEffectiveness() {
+  const rows = await db
+    .select({
+      experimentId: tests.experimentId,
+      testType: tests.testType,
+      score: tests.score,
+      totalQuestions: tests.totalQuestions,
+      userId: tests.userId,
+    })
+    .from(tests)
+    .where(and(isNotNull(tests.experimentId), isNotNull(tests.completedAt)))
+    .orderBy(tests.experimentId, tests.testType);
+
+  const byExp = new Map<string, { pre?: (typeof rows)[0]; post?: (typeof rows)[0] }>();
+  for (const row of rows) {
+    if (!row.experimentId) continue;
+    const entry = byExp.get(row.experimentId) ?? {};
+    if (row.testType === "pre") entry.pre = row;
+    if (row.testType === "post") entry.post = row;
+    byExp.set(row.experimentId, entry);
+  }
+
+  return [...byExp.entries()]
+    .filter(([, v]) => v.pre && v.post)
+    .map(([experimentId, v]) => ({
+      experimentId,
+      preScore: v.pre!.score,
+      postScore: v.post!.score,
+      total: v.pre!.totalQuestions,
+      prePct: v.pre!.totalQuestions > 0
+        ? Math.round((v.pre!.score / v.pre!.totalQuestions) * 100)
+        : 0,
+      postPct: v.post!.totalQuestions > 0
+        ? Math.round((v.post!.score / v.post!.totalQuestions) * 100)
+        : 0,
+    }));
+}
+
+/** Per-question accuracy, avg time, timeout count — sorted by difficulty (hardest first). */
+export async function getQuestionAnalysis() {
+  const rows = await db
+    .select({
+      questionId: answers.questionId,
+      emailSubject: questions.emailSubject,
+      category: questions.category,
+      ageGroup: questions.ageGroup,
+      isPhish: questions.isPhish,
+      totalAnswers: count(),
+      correctCount: sql<number>`COUNT(CASE WHEN ${answers.isCorrect} THEN 1 END)`,
+      avgTimeMs: sql<number>`COALESCE(AVG(${answers.timeTakenMs}), 0)`,
+      timeoutCount: sql<number>`COUNT(CASE WHEN ${answers.selectedIsPhish} IS NULL THEN 1 END)`,
+    })
+    .from(answers)
+    .innerJoin(questions, eq(questions.id, answers.questionId))
+    .groupBy(
+      answers.questionId,
+      questions.emailSubject,
+      questions.category,
+      questions.ageGroup,
+      questions.isPhish,
+    )
+    .orderBy(
+      sql`COUNT(CASE WHEN ${answers.isCorrect} THEN 1 END)::float / NULLIF(COUNT(*), 0)`,
+    );
+
+  return rows.map((r) => ({
+    questionId: r.questionId,
+    emailSubject: r.emailSubject,
+    category: r.category,
+    ageGroup: r.ageGroup,
+    isPhish: r.isPhish,
+    totalAnswers: r.totalAnswers,
+    correctCount: Number(r.correctCount),
+    correctRate:
+      r.totalAnswers > 0 ? (Number(r.correctCount) / r.totalAnswers) * 100 : 0,
+    avgTimeMs: Number(r.avgTimeMs),
+    timeoutCount: Number(r.timeoutCount),
+  }));
+}
+
+/** Aggregate behavioral metrics: timeouts, response time, completion rate. */
+export async function getBehavioralData() {
+  const [answerRow] = await db
+    .select({
+      totalAnswers: count(),
+      timeoutCount: sql<number>`COUNT(CASE WHEN ${answers.selectedIsPhish} IS NULL THEN 1 END)`,
+      avgTimeMs: sql<number>`COALESCE(AVG(${answers.timeTakenMs}), 0)`,
+    })
+    .from(answers);
+
+  const [testRow] = await db
+    .select({
+      totalTests: count(),
+      completedTests: sql<number>`COUNT(${tests.completedAt})`,
+    })
+    .from(tests);
+
+  // Per-question avg response time for chart
+  const perQuestion = await db
+    .select({
+      questionId: answers.questionId,
+      emailSubject: questions.emailSubject,
+      avgTimeMs: sql<number>`COALESCE(AVG(${answers.timeTakenMs}), 0)`,
+      timeoutCount: sql<number>`COUNT(CASE WHEN ${answers.selectedIsPhish} IS NULL THEN 1 END)`,
+      totalAnswers: count(),
+    })
+    .from(answers)
+    .innerJoin(questions, eq(questions.id, answers.questionId))
+    .groupBy(answers.questionId, questions.emailSubject)
+    .orderBy(answers.questionId);
+
+  return {
+    totalAnswers: answerRow.totalAnswers,
+    timeoutCount: Number(answerRow.timeoutCount),
+    timeoutRate:
+      answerRow.totalAnswers > 0
+        ? (Number(answerRow.timeoutCount) / answerRow.totalAnswers) * 100
+        : 0,
+    avgResponseTimeMs: Number(answerRow.avgTimeMs),
+    totalTests: testRow.totalTests,
+    completedTests: Number(testRow.completedTests),
+    completionRate:
+      testRow.totalTests > 0
+        ? (Number(testRow.completedTests) / testRow.totalTests) * 100
+        : 0,
+    perQuestion: perQuestion.map((r) => ({
+      questionId: r.questionId,
+      emailSubject: r.emailSubject,
+      avgTimeMs: Number(r.avgTimeMs),
+      timeoutCount: Number(r.timeoutCount),
+      totalAnswers: r.totalAnswers,
+    })),
+  };
+}
+
+/** Per age-group stats + per-category accuracy for radar chart. */
+export async function getAgeGroupBreakdown() {
+  const summary = await db
+    .select({
+      ageGroup: tests.ageGroup,
+      testCount: count(),
+      completedCount: sql<number>`COUNT(${tests.completedAt})`,
+      avgScorePct: sql<number>`COALESCE(AVG(
+        CASE WHEN ${tests.completedAt} IS NOT NULL
+          THEN ${tests.score}::float / NULLIF(${tests.totalQuestions}, 0) * 100
+        END
+      ), 0)`,
+      avgTimeMs: sql<number>`COALESCE(AVG(
+        CASE WHEN ${tests.completedAt} IS NOT NULL THEN ${tests.totalTimeMs} END
+      ), 0)`,
+    })
+    .from(tests)
+    .groupBy(tests.ageGroup);
+
+  const categoryAccuracy = await db
+    .select({
+      ageGroup: questions.ageGroup,
+      category: questions.category,
+      totalAnswers: count(),
+      correctCount: sql<number>`COUNT(CASE WHEN ${answers.isCorrect} THEN 1 END)`,
+    })
+    .from(answers)
+    .innerJoin(questions, eq(questions.id, answers.questionId))
+    .groupBy(questions.ageGroup, questions.category);
+
+  return {
+    summary: summary.map((r) => ({
+      ageGroup: r.ageGroup,
+      testCount: r.testCount,
+      completedCount: Number(r.completedCount),
+      avgScorePct: Number(r.avgScorePct),
+      avgTimeMs: Number(r.avgTimeMs),
+    })),
+    categoryAccuracy: categoryAccuracy.map((r) => ({
+      ageGroup: r.ageGroup,
+      category: r.category,
+      totalAnswers: r.totalAnswers,
+      correctRate:
+        r.totalAnswers > 0 ? (Number(r.correctCount) / r.totalAnswers) * 100 : 0,
+    })),
   };
 }
