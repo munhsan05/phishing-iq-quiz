@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ConfettiLauncher } from "@/components/confetti-launcher";
+import { PostTestButton } from "@/components/post-test-button";
 import { getTestWithDetails } from "@/db/queries";
 import { AGE_GROUP_ICONS, AGE_GROUP_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -102,6 +103,18 @@ export default async function ResultPage({ params }: PageProps) {
                   {pct}% зөв
                 </div>
               </div>
+
+              {/* Test type indicator */}
+              {test.testType === "pre" && (
+                <div className="mt-4 rounded-lg bg-blue-2/10 px-4 py-2 text-sm text-blue-2">
+                  📋 Энэ бол <strong>Pre-test</strong> үр дүн. Доорх тайлбар, зөвлөмжийг анхааралтай уншаад Post-test өгнө үү.
+                </div>
+              )}
+              {test.testType === "post" && (
+                <div className="mt-4 rounded-lg bg-emerald-500/10 px-4 py-2 text-sm text-emerald-400">
+                  📊 <strong>Post-test</strong> дууслаа! Харьцуулалт харах товч дээр дарж сайжрал харна уу.
+                </div>
+              )}
             </div>
           </Card>
 
@@ -256,26 +269,68 @@ export default async function ResultPage({ params }: PageProps) {
             </ol>
           </Card>
 
-          {/* Action buttons — copy ported from legacy results-screen */}
+          {/* Action buttons */}
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "h-12 flex-1 text-base",
-              )}
-            >
-              ↩ Дахин тест өгөх
-            </Link>
-            <Link
-              href="/leaderboard"
-              className={cn(
-                buttonVariants({ variant: "default", size: "lg" }),
-                "h-12 flex-1 bg-gradient-to-r from-blue to-cyan text-base text-white shadow-[0_8px_24px_rgba(26,108,246,0.35)]",
-              )}
-            >
-              👑 Leaderboard харах
-            </Link>
+            {test.testType === "pre" && test.experimentId ? (
+              <>
+                <Link
+                  href="/"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "lg" }),
+                    "h-12 flex-1 text-base",
+                  )}
+                >
+                  ↩ Нүүр хуудас
+                </Link>
+                <PostTestButton
+                  experimentId={test.experimentId}
+                  name={user.name}
+                  ageGroup={test.ageGroup}
+                />
+              </>
+            ) : test.testType === "post" && test.experimentId ? (
+              <>
+                <Link
+                  href="/"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "lg" }),
+                    "h-12 flex-1 text-base",
+                  )}
+                >
+                  ↩ Нүүр хуудас
+                </Link>
+                <Link
+                  href={`/comparison/${test.experimentId}`}
+                  className={cn(
+                    buttonVariants({ variant: "default", size: "lg" }),
+                    "h-12 flex-1 bg-gradient-to-r from-blue to-cyan text-base text-white shadow-[0_8px_24px_rgba(26,108,246,0.35)]",
+                  )}
+                >
+                  📊 Харьцуулалт харах
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/"
+                  className={cn(
+                    buttonVariants({ variant: "outline", size: "lg" }),
+                    "h-12 flex-1 text-base",
+                  )}
+                >
+                  ↩ Дахин тест өгөх
+                </Link>
+                <Link
+                  href="/leaderboard"
+                  className={cn(
+                    buttonVariants({ variant: "default", size: "lg" }),
+                    "h-12 flex-1 bg-gradient-to-r from-blue to-cyan text-base text-white shadow-[0_8px_24px_rgba(26,108,246,0.35)]",
+                  )}
+                >
+                  👑 Leaderboard харах
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </main>
