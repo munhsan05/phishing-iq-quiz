@@ -45,7 +45,7 @@ export const AGE_GROUP_ICONS: Record<AgeGroup, string> = {
 // ============================================
 
 /** Per-question time limit in seconds (legacy `QUESTION_TIME`). */
-export const QUIZ_TIME_PER_QUESTION_SEC = 30;
+export const QUIZ_TIME_PER_QUESTION_SEC = 60;
 
 // ============================================
 // QUESTION COUNTS

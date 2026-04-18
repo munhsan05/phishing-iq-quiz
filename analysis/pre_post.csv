@@ -1,0 +1,15 @@
+metric,value
+n_pairs,90
+pre_mean_pct,52.5
+post_mean_pct,69.2
+mean_diff_pct,16.7
+sd_diff,19.705
+t_statistic,8.058
+df,89
+p_value,<0.001
+cohens_d,0.849
+improved_count,70
+same_count,10
+declined_count,10
+pre_avg_time_sec,156.4
+post_avg_time_sec,144.7

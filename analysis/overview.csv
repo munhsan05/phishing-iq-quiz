@@ -1,0 +1,12 @@
+metric,value
+total_users,156
+total_tests,246
+completed_tests,242
+completion_rate_pct,98.4
+avg_score_pct,58.6
+avg_time_sec,149.9
+total_answers,3479
+correct_answers,2027
+overall_accuracy_pct,58.3
+timeout_count,208
+timeout_rate_pct,6.0
