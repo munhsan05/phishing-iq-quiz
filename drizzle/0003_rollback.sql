@@ -1,12 +1,26 @@
 -- diploma_project/drizzle/0003_rollback.sql
 -- Roll back multi-modal phishing expansion.
--- Safe to run even if multiple migrations applied; operations use IF EXISTS.
+-- Idempotent: safe to run even if migration was not applied or was partially rolled back.
 
-DELETE FROM answers
-  WHERE score IS NOT NULL OR inbox_selections IS NOT NULL;
+-- Guard DELETEs behind existence checks so re-running does not error when columns are already gone.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'answers' AND column_name = 'score'
+  ) THEN
+    DELETE FROM answers
+      WHERE score IS NOT NULL OR inbox_selections IS NOT NULL;
+  END IF;
 
-DELETE FROM questions
-  WHERE type != 'email';
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'questions' AND column_name = 'type'
+  ) THEN
+    DELETE FROM questions
+      WHERE type != 'email';
+  END IF;
+END $$;
 
 DROP TABLE IF EXISTS inbox_batches CASCADE;
 
