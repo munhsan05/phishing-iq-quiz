@@ -11,6 +11,8 @@ import {
   timestamp,
   uniqueIndex,
   index,
+  jsonb,
+  numeric,
 } from "drizzle-orm/pg-core";
 
 // ============================================
@@ -27,6 +29,32 @@ export const questionCategoryEnum = pgEnum("question_category", [
   "credential_theft",
   "other",
 ]);
+
+export const questionTypeEnum = pgEnum("question_type", [
+  "email",
+  "sms",
+  "qr",
+  "browser",
+  "inbox_item",
+]);
+
+export const quizModeEnum = pgEnum("quiz_mode", [
+  "leveled",
+  "mixed",
+  "category",
+]);
+
+// ============================================
+// INBOX BATCHES
+// ============================================
+export const inboxBatches = pgTable("inbox_batches", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ageGroup: ageGroupEnum("age_group").notNull(),
+  context: text("context"),
+  timeLimitSec: smallint("time_limit_sec").default(90).notNull(),
+  orderIndex: smallint("order_index").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
 
 // ============================================
 // USERS
@@ -52,14 +80,17 @@ export const questions = pgTable(
     ageGroup: ageGroupEnum("age_group").notNull(),
     orderIndex: smallint("order_index").notNull(),
     category: questionCategoryEnum("category").notNull(),
-    // Email fields
+    // NEW: modality type + polymorphic content
+    type: questionTypeEnum("type").default("email").notNull(),
+    content: jsonb("content").default({}).notNull(),
+    batchId: uuid("batch_id").references(() => inboxBatches.id, { onDelete: "cascade" }),
+    // Legacy email fields (retained for backward compat)
     emailFrom: varchar("email_from", { length: 200 }).notNull(),
     emailSubject: varchar("email_subject", { length: 300 }).notNull(),
     emailBody: text("email_body").notNull(),
     emailUrl: varchar("email_url", { length: 500 }),
-    // Answer
+    // Answer + education
     isPhish: boolean("is_phish").notNull(),
-    // Education / feedback
     explanation: text("explanation").notNull(),
     recommendation: text("recommendation").notNull(),
     difficulty: smallint("difficulty").default(3).notNull(),
@@ -67,6 +98,7 @@ export const questions = pgTable(
   },
   (t) => ({
     ageOrderUnique: uniqueIndex("questions_age_order_unique").on(t.ageGroup, t.orderIndex),
+    batchIdx: index("questions_batch_idx").on(t.batchId),
   }),
 );
 
@@ -107,10 +139,11 @@ export const answers = pgTable(
     testId: uuid("test_id")
       .notNull()
       .references(() => tests.id, { onDelete: "cascade" }),
-    questionId: integer("question_id")
-      .notNull()
-      .references(() => questions.id),
+    questionId: integer("question_id").references(() => questions.id), // NOW nullable
+    batchId: uuid("batch_id").references(() => inboxBatches.id),       // NEW
     selectedIsPhish: boolean("selected_is_phish"),
+    inboxSelections: jsonb("inbox_selections"),                        // NEW
+    score: numeric("score", { precision: 4, scale: 3 }),               // NEW
     isCorrect: boolean("is_correct").notNull(),
     timeTakenMs: integer("time_taken_ms").notNull(),
     answeredAt: timestamp("answered_at", { withTimezone: true }).defaultNow().notNull(),
@@ -118,6 +151,7 @@ export const answers = pgTable(
   (t) => ({
     testIdx: index("answers_test_idx").on(t.testId),
     questionIdx: index("answers_question_idx").on(t.questionId),
+    batchIdx: index("answers_batch_idx").on(t.batchId),                // NEW
   }),
 );
 
@@ -132,3 +166,5 @@ export type Test = typeof tests.$inferSelect;
 export type NewTest = typeof tests.$inferInsert;
 export type Answer = typeof answers.$inferSelect;
 export type NewAnswer = typeof answers.$inferInsert;
+export type InboxBatch = typeof inboxBatches.$inferSelect;
+export type NewInboxBatch = typeof inboxBatches.$inferInsert;
