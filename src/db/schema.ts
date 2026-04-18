@@ -143,7 +143,8 @@ export const answers = pgTable(
     batchId: uuid("batch_id").references(() => inboxBatches.id),       // NEW
     selectedIsPhish: boolean("selected_is_phish"),
     inboxSelections: jsonb("inbox_selections"),                        // NEW
-    score: numeric("score", { precision: 4, scale: 3 }),               // NEW
+    // Range: 0.000–1.100 (F1 for inbox, 0/1 binary, 1.1 for browser report bonus).
+    score: numeric("score", { precision: 4, scale: 3 }),
     isCorrect: boolean("is_correct").notNull(),
     timeTakenMs: integer("time_taken_ms").notNull(),
     answeredAt: timestamp("answered_at", { withTimezone: true }).defaultNow().notNull(),
