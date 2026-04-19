@@ -51,14 +51,16 @@ export async function upsertUser(input: {
 // QUESTION OPERATIONS
 // ============================================
 
-/** Get all questions for an age group, ordered by order_index. */
+/** Get all email-type questions for an age group, ordered by order_index.
+ *  The `type='email'` filter ensures only legacy email questions are picked up
+ *  even when the shared DB also contains v2 multi-modal rows (sms/qr/browser/inbox_item). */
 export async function getQuestionsByAgeGroup(
   ageGroup: "6-18" | "18-35" | "35-60+",
 ) {
   return db
     .select()
     .from(questions)
-    .where(eq(questions.ageGroup, ageGroup))
+    .where(and(eq(questions.ageGroup, ageGroup), sql`type = 'email'`))
     .orderBy(asc(questions.orderIndex));
 }
 
