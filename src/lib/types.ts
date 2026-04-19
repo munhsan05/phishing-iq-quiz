@@ -28,79 +28,26 @@ export type {
 };
 
 // ============================================
-// CONTENT SHAPES (per question type)
-// ============================================
-
-export type EmailContent = {
-  from: string;
-  subject: string;
-  body: string;
-  url?: string;
-};
-
-export type SmsContent = {
-  sender: string;
-  body: string;
-  url?: string;
-};
-
-export type QrContent = {
-  scenario: string;
-  posterImagePath: string;
-  qrUrl: string;
-  contextDescription: string;
-};
-
-export type BrowserContent = {
-  browserUrl: string;
-  pageTitle: string;
-  warningTriggered: boolean;
-  redirectFrom?: string;
-};
-
-export type InboxItemContent = EmailContent;
-
-// ============================================
-// MODE + TYPE ENUMS
-// ============================================
-
-export type QuizMode = "leveled" | "mixed" | "category";
-export type QuestionType = "email" | "sms" | "qr" | "browser" | "inbox_batch";
-
-// ============================================
 // CLIENT-ONLY DTOs
 // ============================================
 
 /**
- * Discriminated union of all question shapes safe to send to the client.
- * Excludes `isPhish`, `explanation`, and `recommendation` (revealed only
- * after the user submits an answer via submitAnswer).
- *
- * Note: `inbox_batch` has `id: string` (batch UUID); all other variants
- * have `id: number` (serial PK).
+ * The subset of a question safe to send to the client during quiz play.
+ * Notably excludes `isPhish`, `explanation`, and `recommendation`
+ * (those are revealed only after the user submits an answer).
  */
-export type ClientQuestion =
-  | { id: number; type: "email"; content: EmailContent; ageGroup: string; orderIndex: number }
-  | { id: number; type: "sms"; content: SmsContent; ageGroup: string; orderIndex: number }
-  | { id: number; type: "qr"; content: QrContent; ageGroup: string; orderIndex: number }
-  | { id: number; type: "browser"; content: BrowserContent; ageGroup: string; orderIndex: number }
-  | {
-      id: string;
-      type: "inbox_batch";
-      ageGroup: string;
-      context?: string;
-      timeLimitSec: number;
-      orderIndex: number;
-      items: Array<{ id: number; content: InboxItemContent; isPhish: boolean }>;
-    };
-
-/**
- * Discriminated union of answer inputs keyed by `kind`.
- */
-export type AnswerInput =
-  | { kind: "binary"; questionId: number; choice: "phish" | "legit"; timeTakenMs: number }
-  | { kind: "browser"; questionId: number; choice: "back" | "proceed" | "report"; timeTakenMs: number }
-  | { kind: "inbox"; batchId: string; selectedItemIds: number[]; timeTakenMs: number };
+export type ClientQuestion = Pick<
+  Question,
+  | "id"
+  | "ageGroup"
+  | "orderIndex"
+  | "category"
+  | "emailFrom"
+  | "emailSubject"
+  | "emailBody"
+  | "emailUrl"
+  | "difficulty"
+>;
 
 /**
  * A user's answer to a single question, held in local session state.
@@ -130,16 +77,29 @@ export type AnswerFeedback = {
 // ============================================
 
 /**
- * Flat quiz session shape used for multi-modal quiz runs.
+ * Finite state for the quiz session on the client.
+ * Drives the QuizRunner component.
  */
-export type QuizSession = {
-  testId: string;
-  mode: QuizMode;
-  categoryFilter?: QuestionType;
-  questions: ClientQuestion[];
-  currentIndex: number;
-  startedAt: number;
-};
+export type QuizSession =
+  | { phase: "idle" }
+  | { phase: "loading" }
+  | {
+      phase: "running";
+      testId: string;
+      ageGroup: AgeGroup;
+      currentIndex: number;
+      questions: ClientQuestion[];
+      answers: ClientAnswer[];
+      startedAt: number;
+    }
+  | {
+      phase: "finished";
+      testId: string;
+      ageGroup: AgeGroup;
+      score: number;
+      totalQuestions: number;
+      totalTimeMs: number;
+    };
 
 // ============================================
 // LEADERBOARD

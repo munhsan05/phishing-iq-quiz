@@ -1,190 +1,295 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
 import { GmailFrame } from "@/components/gmail-frame";
-import { SmsCard } from "@/components/sms-card";
-import { QrCard } from "@/components/qr-card";
-import { BrowserWarning } from "@/components/browser-warning";
-import { InboxTriage } from "@/components/inbox-triage";
 import { QuestionTimer } from "@/components/question-timer";
 import { submitAnswer, finishQuiz } from "@/app/actions/quiz";
-import { TYPE_TIME_LIMITS_SEC, TYPE_LABELS } from "@/lib/constants";
-import type { ClientQuestion, AnswerInput } from "@/lib/types";
+import type { AgeGroup } from "@/lib/constants";
+import { QUIZ_TIME_PER_QUESTION_SEC } from "@/lib/constants";
+import type { ClientQuestion, AnswerFeedback } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
-type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
-  ? Omit<T, K>
-  : never;
-type AnswerInputNoTime = DistributiveOmit<AnswerInput, "timeTakenMs">;
-
-type Props = {
+type QuizRunnerProps = {
   testId: string;
   questions: ClientQuestion[];
+  ageGroup: AgeGroup;
 };
 
-export function QuizRunner({ testId, questions }: Props) {
+type Phase = "question" | "feedback" | "finishing";
+
+/**
+ * Main quiz runner: walks the user through `questions` one at a time,
+ * renders each as an email card, collects their phishing/legit verdict,
+ * shows per-question feedback, then calls `finishQuiz` and routes to
+ * `/result/{testId}`.
+ */
+export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
   const router = useRouter();
-  const [idx, setIdx] = useState(0);
-  const [startAt, setStartAt] = useState(() => Date.now());
-  const [, startTransition] = useTransition();
-  const [isPending, setIsPending] = useState(false);
 
-  const current = questions[idx];
-  if (!current) return null;
-  const timeLimit = TYPE_TIME_LIMITS_SEC[current.type];
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [phase, setPhase] = useState<Phase>("question");
+  const [feedback, setFeedback] = useState<AnswerFeedback | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
 
-  function handleAnswer(input: AnswerInputNoTime) {
-    if (isPending) return;
-    setIsPending(true);
-    const timeTakenMs = Date.now() - startAt;
-    const answerInput = { ...input, timeTakenMs } as AnswerInput;
+  // Per-question start time (for `timeTakenMs`).
+  const [questionStartedAt, setQuestionStartedAt] = useState<number>(() =>
+    Date.now(),
+  );
+  // Total quiz start time (for `totalTimeMs`).
+  const [sessionStartedAt] = useState<number>(() => Date.now());
 
-    startTransition(async () => {
+  const current = questions[currentIndex];
+  const total = questions.length;
+  const isLast = currentIndex === total - 1;
+
+  // Reset per-question start time whenever we land on a new question.
+  useEffect(() => {
+    if (phase === "question") {
+      setQuestionStartedAt(Date.now());
+      setTimedOut(false);
+    }
+  }, [currentIndex, phase]);
+
+  const handleAnswer = useCallback(
+    async (selectedIsPhish: boolean | null) => {
+      if (phase !== "question" || isSubmitting) return;
+      setIsSubmitting(true);
+
+      const timeTakenMs = Math.max(0, Date.now() - questionStartedAt);
+      if (selectedIsPhish === null) setTimedOut(true);
+
       try {
-        await submitAnswer(testId, answerInput);
-        if (idx + 1 >= questions.length) {
-          await finishQuiz(testId);
-          router.push(`/result/${testId}`);
-        } else {
-          setIdx(idx + 1);
-          setStartAt(Date.now());
-          setIsPending(false);
-        }
+        const fb = await submitAnswer({
+          testId,
+          questionId: current.id,
+          selectedIsPhish,
+          timeTakenMs,
+        });
+        setFeedback(fb);
+        if (fb.isCorrect) setScore((s) => s + 1);
+        setPhase("feedback");
       } catch (err) {
-        console.error("submitAnswer failed", err);
-        setIsPending(false);
+        console.error(err);
+        toast.error(
+          err instanceof Error
+            ? `Хариулт хадгалахад алдаа: ${err.message}`
+            : "Хариулт хадгалахад алдаа гарлаа",
+        );
+      } finally {
+        setIsSubmitting(false);
       }
-    });
-  }
+    },
+    [phase, isSubmitting, questionStartedAt, testId, current],
+  );
+
+  const handleNext = useCallback(async () => {
+    if (phase !== "feedback") return;
+
+    if (!isLast) {
+      setFeedback(null);
+      setPhase("question");
+      setCurrentIndex((i) => i + 1);
+      return;
+    }
+
+    // Last question — finalise.
+    setPhase("finishing");
+    const totalTimeMs = Math.max(0, Date.now() - sessionStartedAt);
+    try {
+      await finishQuiz({ testId, score, totalTimeMs });
+      router.push(`/result/${testId}`);
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        err instanceof Error
+          ? `Тест дуусгахад алдаа: ${err.message}`
+          : "Тест дуусгахад алдаа гарлаа",
+      );
+      setPhase("feedback"); // let user retry
+    }
+  }, [phase, isLast, testId, score, sessionStartedAt, router]);
+
+  const handleTimerExpire = useCallback(() => {
+    if (phase === "question") {
+      void handleAnswer(null);
+    }
+  }, [phase, handleAnswer]);
+
+  // Keyboard shortcuts: P = phishing, L = legit, Enter = next.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement) return;
+      if (e.target instanceof HTMLTextAreaElement) return;
+      const key = e.key.toLowerCase();
+      if (phase === "question" && !isSubmitting) {
+        if (key === "p") {
+          e.preventDefault();
+          void handleAnswer(true);
+        } else if (key === "l") {
+          e.preventDefault();
+          void handleAnswer(false);
+        }
+      } else if (phase === "feedback") {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          void handleNext();
+        }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [phase, isSubmitting, handleAnswer, handleNext]);
+
+  if (!current) return null;
 
   return (
-    <div className="mx-auto w-full max-w-5xl p-4 sm:p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          {idx + 1} / {questions.length}
-          <span className="ml-2 text-xs">— {TYPE_LABELS[current.type]}</span>
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+      {/* Header: progress + score */}
+      <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-card/60 px-3 py-3 backdrop-blur sm:px-5 sm:py-4">
+        <div className="flex flex-col gap-1">
+          <span className="text-xs uppercase tracking-wider text-muted-foreground">
+            Насны бүлэг {ageGroup}
+          </span>
+          <span className="font-mono text-base font-bold text-white sm:text-lg">
+            Асуулт {currentIndex + 1}/{total}
+          </span>
         </div>
-        <QuestionTimer
-          durationSec={timeLimit}
-          resetKey={String(current.id)}
-          onExpire={() => {
-            if (current.type === "inbox_batch") {
-              handleAnswer({
-                kind: "inbox",
-                batchId: String(current.id),
-                selectedItemIds: [],
-              });
-            } else if (current.type === "browser") {
-              handleAnswer({
-                kind: "browser",
-                questionId: Number(current.id),
-                choice: "back",
-              });
-            } else {
-              handleAnswer({
-                kind: "binary",
-                questionId: Number(current.id),
-                choice: "legit",
-              });
-            }
-          }}
-        />
+        <div className="flex flex-col items-end gap-1">
+          <span className="text-xs uppercase tracking-wider text-muted-foreground">
+            Оноо
+          </span>
+          <span className="font-mono text-xl font-extrabold text-cyan sm:text-2xl">
+            {score}
+            <span className="text-base text-muted-foreground">/{total}</span>
+          </span>
+        </div>
       </div>
 
-      {current.type === "email" && <GmailFrame content={current.content} />}
-      {current.type === "sms" && <SmsCard content={current.content} />}
-      {current.type === "qr" && <QrCard content={current.content} />}
-      {current.type === "browser" && (
-        <BrowserWarning content={current.content} />
-      )}
-      {current.type === "inbox_batch" && (
-        <InboxTriage
-          batch={current}
-          onSubmit={(ids) =>
-            handleAnswer({
-              kind: "inbox",
-              batchId: String(current.id),
-              selectedItemIds: ids,
-            })
-          }
+      {/* Timer + progress (sticky on mobile) */}
+      <div className="sticky top-0 z-20 -mx-4 bg-background/95 px-4 pb-2 pt-2 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:backdrop-blur-none">
+        <QuestionTimer
+          durationSec={QUIZ_TIME_PER_QUESTION_SEC}
+          onExpire={handleTimerExpire}
+          resetKey={current.id}
+          paused={phase !== "question"}
         />
-      )}
-
-      {current.type !== "inbox_batch" && current.type !== "browser" && (
-        <div className="mt-6 flex gap-3 justify-center">
-          <button
-            disabled={isPending}
-            onClick={() =>
-              handleAnswer({
-                kind: "binary",
-                questionId: Number(current.id),
-                choice: "phish",
-              })
-            }
-            className="px-6 py-3 rounded-md bg-red-600 hover:bg-red-700 text-white font-semibold disabled:opacity-50"
-          >
-            🎣 Фишинг
-          </button>
-          <button
-            disabled={isPending}
-            onClick={() =>
-              handleAnswer({
-                kind: "binary",
-                questionId: Number(current.id),
-                choice: "legit",
-              })
-            }
-            className="px-6 py-3 rounded-md bg-green-600 hover:bg-green-700 text-white font-semibold disabled:opacity-50"
-          >
-            ✓ Жинхэнэ
-          </button>
+        {/* Progress bar across questions */}
+        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-blue to-cyan transition-all duration-300"
+            style={{
+              width: `${(((currentIndex + (phase === "feedback" ? 1 : 0)) / total) * 100).toFixed(2)}%`,
+            }}
+            aria-hidden="true"
+          />
         </div>
-      )}
+      </div>
 
-      {current.type === "browser" && (
-        <div className="mt-6 flex gap-3 justify-center flex-wrap">
-          <button
-            disabled={isPending}
-            onClick={() =>
-              handleAnswer({
-                kind: "browser",
-                questionId: Number(current.id),
-                choice: "back",
-              })
-            }
-            className="px-5 py-2.5 rounded-md bg-secondary hover:bg-secondary/80 font-semibold disabled:opacity-50"
-          >
-            ← Буцах
-          </button>
-          <button
-            disabled={isPending}
-            onClick={() =>
-              handleAnswer({
-                kind: "browser",
-                questionId: Number(current.id),
-                choice: "proceed",
-              })
-            }
-            className="px-5 py-2.5 rounded-md bg-amber-600 hover:bg-amber-700 text-white font-semibold disabled:opacity-50"
-          >
-            Үргэлжлүүлэх
-          </button>
-          <button
-            disabled={isPending}
-            onClick={() =>
-              handleAnswer({
-                kind: "browser",
-                questionId: Number(current.id),
-                choice: "report",
-              })
-            }
-            className="px-5 py-2.5 rounded-md bg-red-600 hover:bg-red-700 text-white font-semibold disabled:opacity-50"
-          >
-            🚩 Report
-          </button>
+      {/* Gmail email frame */}
+      <GmailFrame question={current} />
+
+      {/* Feedback panel — shown after the user answers */}
+      {phase === "feedback" && feedback ? (
+        <div
+          className={cn(
+            "rounded-xl border px-4 py-3 text-sm",
+            timedOut
+              ? "border-yellow-300 bg-yellow-50 text-yellow-900"
+              : feedback.isCorrect
+                ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+                : "border-rose-300 bg-rose-50 text-rose-900",
+          )}
+          role="alert"
+        >
+          <div className="text-base font-bold">
+            {timedOut
+              ? `⏰ Хугацаа дууслаа! — ${feedback.correctIsPhish ? "🎣 Фишинг имэйл байлаа" : "✉️ Жинхэнэ имэйл байлаа"}`
+              : feedback.isCorrect
+                ? `✅ Зөв! — ${feedback.correctIsPhish ? "🎣 Фишинг имэйл" : "✉️ Жинхэнэ имэйл"}`
+                : `❌ Буруу! — ${feedback.correctIsPhish ? "🎣 Энэ нь Фишинг имэйл байсан" : "✉️ Энэ нь Жинхэнэ имэйл байсан"}`}
+          </div>
+          <div className="mt-2 text-[0.95em] leading-relaxed opacity-90">
+            <span className="font-semibold">Тайлбар: </span>
+            {feedback.explanation}
+          </div>
+          <div className="mt-2 text-[0.95em] leading-relaxed opacity-90">
+            <span className="font-semibold">Зөвлөмж: </span>
+            {feedback.recommendation}
+          </div>
         </div>
-      )}
+      ) : null}
+
+      {/* Action buttons */}
+      <div className="flex flex-col gap-3 sm:flex-row">
+        {phase === "question" ? (
+          <>
+            <Button
+              type="button"
+              size="lg"
+              variant="destructive"
+              disabled={isSubmitting}
+              onClick={() => handleAnswer(true)}
+              className="h-14 flex-1 text-base font-semibold"
+              aria-keyshortcuts="P"
+            >
+              ⚠️ Фишинг
+              <span className="ml-2 rounded bg-black/10 px-1.5 py-0.5 text-[0.65rem] font-mono">
+                P
+              </span>
+            </Button>
+            <Button
+              type="button"
+              size="lg"
+              disabled={isSubmitting}
+              onClick={() => handleAnswer(false)}
+              className="h-14 flex-1 bg-emerald-600 text-base font-semibold text-white hover:bg-emerald-700"
+              aria-keyshortcuts="L"
+            >
+              ✅ Жинхэнэ
+              <span className="ml-2 rounded bg-black/20 px-1.5 py-0.5 text-[0.65rem] font-mono">
+                L
+              </span>
+            </Button>
+          </>
+        ) : (
+          <Button
+            type="button"
+            size="lg"
+            disabled={phase === "finishing"}
+            onClick={handleNext}
+            className="h-14 w-full bg-primary text-base font-semibold text-primary-foreground hover:bg-primary/90"
+          >
+            {phase === "finishing"
+              ? "Тест дуусгаж байна..."
+              : isLast
+                ? "Үр дүн харах →"
+                : "Дараагийн асуулт →"}
+          </Button>
+        )}
+      </div>
+
+      {/* Keyboard hint */}
+      <div className="text-center text-xs text-muted-foreground" aria-hidden="true">
+        Гарын товчлол:{" "}
+        <kbd className="rounded border border-border bg-white/5 px-1.5 py-0.5 font-mono text-[0.65rem]">
+          P
+        </kbd>{" "}
+        — Фишинг,{" "}
+        <kbd className="rounded border border-border bg-white/5 px-1.5 py-0.5 font-mono text-[0.65rem]">
+          L
+        </kbd>{" "}
+        — Жинхэнэ,{" "}
+        <kbd className="rounded border border-border bg-white/5 px-1.5 py-0.5 font-mono text-[0.65rem]">
+          Enter
+        </kbd>{" "}
+        — Дараагийн
+      </div>
     </div>
   );
 }

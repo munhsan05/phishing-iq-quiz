@@ -9,7 +9,6 @@ const TABS = [
   { key: "questions", label: "Асуултууд" },
   { key: "behavioral", label: "Зан үйл" },
   { key: "age-groups", label: "Насны бүлэг" },
-  { key: "by-type", label: "Төрлийн задлал" },
 ] as const;
 
 export type TabKey = (typeof TABS)[number]["key"];

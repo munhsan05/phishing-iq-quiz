@@ -6,7 +6,6 @@ import { EffectivenessTab } from "./effectiveness-tab";
 import { QuestionsTab } from "./questions-tab";
 import { BehavioralTab } from "./behavioral-tab";
 import { AgeGroupsTab } from "./age-groups-tab";
-import { ByTypeTab } from "./by-type-tab";
 
 export const metadata: Metadata = {
   title: "Analytics Dashboard",
@@ -19,7 +18,6 @@ const VALID_TABS: TabKey[] = [
   "questions",
   "behavioral",
   "age-groups",
-  "by-type",
 ];
 
 type PageProps = {
@@ -56,7 +54,6 @@ export default async function AnalyticsPage({ searchParams }: PageProps) {
         {activeTab === "questions" && <QuestionsTab />}
         {activeTab === "behavioral" && <BehavioralTab />}
         {activeTab === "age-groups" && <AgeGroupsTab />}
-        {activeTab === "by-type" && <ByTypeTab />}
       </div>
     </main>
   );

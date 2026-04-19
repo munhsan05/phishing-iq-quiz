@@ -21,7 +21,7 @@ const sql = neon(process.env.DATABASE_URL);
 
 const drizzleDir = join(process.cwd(), "drizzle");
 const sqlFiles = readdirSync(drizzleDir)
-  .filter((f) => f.endsWith(".sql") && !f.includes("_rollback"))
+  .filter((f) => f.endsWith(".sql"))
   .sort();
 
 if (sqlFiles.length === 0) {
