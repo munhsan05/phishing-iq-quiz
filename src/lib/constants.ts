@@ -3,6 +3,8 @@
  * Age groups, per-question time limit, question counts, UI labels.
  */
 
+import type { QuizMode, QuestionType } from "./types";
+
 // ============================================
 // AGE GROUPS
 // ============================================
@@ -78,3 +80,43 @@ export const CANVAS_LINK_DISTANCE = 160;
 
 /** localStorage key for the anonymous per-browser user UUID. */
 export const USER_ID_STORAGE_KEY = "phishing-quiz-user-id";
+
+// ============================================
+// MULTI-MODAL — mode + type labels, icons, time limits
+// ============================================
+
+export const MODE_LABELS: Record<QuizMode, string> = {
+  leveled: "Түвшнээр сурах",
+  mixed: "Холимог сорил",
+  category: "Төрлөөр сонгох",
+};
+
+export const MODE_DESCRIPTIONS: Record<QuizMode, string> = {
+  leveled: "5 түвшин дараалан: Имэйл → SMS → QR → Browser → Inbox",
+  mixed: "Бүх төрлийн phishing санамсаргүй холилдож гарна",
+  category: "Сонирхсон нэг төрлөөрөө онцгойлон дасгалжина",
+};
+
+export const TYPE_LABELS: Record<QuestionType, string> = {
+  email: "Имэйл",
+  sms: "SMS",
+  qr: "QR код",
+  browser: "Вэб хуудас",
+  inbox_batch: "Inbox цэвэрлэгээ",
+};
+
+export const TYPE_ICONS: Record<QuestionType, string> = {
+  email: "📧",
+  sms: "📱",
+  qr: "📸",
+  browser: "⚠️",
+  inbox_batch: "📬",
+};
+
+export const TYPE_TIME_LIMITS_SEC: Record<QuestionType, number> = {
+  email: 30,
+  sms: 30,
+  qr: 30,
+  browser: 45,
+  inbox_batch: 90,
+};
