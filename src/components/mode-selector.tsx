@@ -32,7 +32,7 @@ export function ModeSelector({
   async function start(mode: QuizMode, category?: QuestionType) {
     setPending(mode);
     try {
-      const { testId, questions } = await startQuiz({
+      const { testId, experimentId, questions } = await startQuiz({
         userId,
         ageGroup: ageGroup as AgeGroup,
         mode,
@@ -46,6 +46,15 @@ export function ModeSelector({
       window.sessionStorage.setItem(
         `quiz-${testId}`,
         JSON.stringify(payload),
+      );
+      // Save pre-test experiment so home page can offer post-test next visit.
+      window.localStorage.setItem(
+        "phishing-quiz-experiment",
+        JSON.stringify({
+          experimentId,
+          ageGroup,
+          userId,
+        }),
       );
       router.push(`/quiz/${testId}`);
     } catch (err) {

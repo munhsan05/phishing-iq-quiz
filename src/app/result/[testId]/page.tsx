@@ -328,7 +328,6 @@ export default async function ResultPage({ params }: PageProps) {
                 </Link>
                 <PostTestButton
                   experimentId={test.experimentId}
-                  name={user.name}
                   ageGroup={test.ageGroup}
                 />
               </>

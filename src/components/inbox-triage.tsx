@@ -22,7 +22,7 @@ export function InboxTriage({
     });
   }
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto w-full max-w-4xl">
       {batch.context && (
         <div className="mb-4 rounded-xl border border-blue-2/30 bg-blue-2/10 px-4 py-3">
           <div className="text-xs uppercase tracking-wider text-blue-2 mb-1">

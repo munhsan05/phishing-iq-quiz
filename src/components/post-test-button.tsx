@@ -2,29 +2,26 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { getOrCreateUserId } from "@/lib/user-id";
 import type { AgeGroup } from "@/lib/constants";
 
 type PostTestButtonProps = {
   experimentId: string;
-  name: string;
   ageGroup: AgeGroup;
 };
 
 /**
  * Stores the experiment state in localStorage and navigates to the
- * home page, where the post-test flow is auto-detected.
+ * home page, which detects the state and offers the post-test.
  */
-export function PostTestButton({
-  experimentId,
-  name,
-  ageGroup,
-}: PostTestButtonProps) {
+export function PostTestButton({ experimentId, ageGroup }: PostTestButtonProps) {
   const router = useRouter();
 
   function handleClick() {
-    localStorage.setItem(
+    const userId = getOrCreateUserId();
+    window.localStorage.setItem(
       "phishing-quiz-experiment",
-      JSON.stringify({ experimentId, ageGroup, name }),
+      JSON.stringify({ experimentId, ageGroup, userId }),
     );
     router.push("/");
   }

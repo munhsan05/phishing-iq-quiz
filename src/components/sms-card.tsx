@@ -4,7 +4,7 @@ import type { SmsContent } from "@/lib/types";
 
 export function SmsCard({ content }: { content: SmsContent }) {
   return (
-    <div className="mx-auto max-w-sm">
+    <div className="mx-auto max-w-md">
       <div className="rounded-[2.5rem] bg-neutral-900 p-2 shadow-2xl border border-neutral-700 relative">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-neutral-900 rounded-b-2xl z-10" />
         <div className="rounded-[2rem] bg-gradient-to-b from-neutral-800 to-neutral-900 overflow-hidden">

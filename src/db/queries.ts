@@ -552,6 +552,14 @@ export function buildInboxBatchClientQuestion(
   };
 }
 
+const PER_TYPE_LIMITS: Record<"email" | "sms" | "qr" | "browser", number> = {
+  email: 5,
+  sms: 3,
+  qr: 3,
+  browser: 3,
+};
+const INBOX_BATCH_LIMIT = 3;
+
 export async function getQuestionsForLeveledMode(
   ageGroup: AgeGroup,
 ): Promise<ClientQuestion[]> {
@@ -563,7 +571,7 @@ export async function getQuestionsForLeveledMode(
       .from(questions)
       .where(and(eq(questions.ageGroup, ageGroup), eq(questions.type, type)))
       .orderBy(sql`random()`)
-      .limit(3);
+      .limit(PER_TYPE_LIMITS[type]);
     for (const r of rows) {
       const c = toClientQuestion(r);
       if (c) out.push(c);
@@ -574,7 +582,7 @@ export async function getQuestionsForLeveledMode(
     .from(inboxBatches)
     .where(eq(inboxBatches.ageGroup, ageGroup))
     .orderBy(sql`random()`)
-    .limit(3);
+    .limit(INBOX_BATCH_LIMIT);
   for (const b of batches) {
     const items = await db
       .select()

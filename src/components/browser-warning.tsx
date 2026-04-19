@@ -12,7 +12,7 @@ export function BrowserWarning({ content }: { content: BrowserContent }) {
   const secure = isHttps(content.browserUrl);
 
   return (
-    <div className="mx-auto max-w-3xl rounded-xl overflow-hidden border-2 border-neutral-700 shadow-2xl bg-neutral-900">
+    <div className="mx-auto w-full max-w-5xl rounded-xl overflow-hidden border-2 border-neutral-700 shadow-2xl bg-neutral-900">
       <div className="bg-neutral-800 px-3 py-2 flex items-center gap-2 border-b border-neutral-700">
         <div className="flex gap-1.5 mr-2">
           <div className="h-3 w-3 rounded-full bg-red-500" />

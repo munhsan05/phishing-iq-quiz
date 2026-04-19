@@ -114,9 +114,9 @@ export const TYPE_ICONS: Record<QuestionType, string> = {
 };
 
 export const TYPE_TIME_LIMITS_SEC: Record<QuestionType, number> = {
-  email: 30,
-  sms: 30,
-  qr: 30,
-  browser: 45,
-  inbox_batch: 90,
+  email: 100,
+  sms: 100,
+  qr: 100,
+  browser: 100,
+  inbox_batch: 100,
 };

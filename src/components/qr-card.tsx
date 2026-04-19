@@ -31,20 +31,20 @@ export function QrCard({ content }: { content: QrContent }) {
     };
 
   return (
-    <div className="mx-auto max-w-md">
+    <div className="mx-auto w-full max-w-xl">
       <div
-        className={`rounded-xl overflow-hidden border border-border shadow-2xl ${theme.bg} relative`}
+        className={`rounded-2xl overflow-hidden border border-border shadow-2xl ${theme.bg} relative`}
       >
-        <div className="px-6 pt-8 pb-4 text-center">
-          <div className="text-5xl mb-2">{theme.emoji}</div>
-          <h3 className="text-2xl font-bold text-white">{theme.title}</h3>
-          <p className={`text-sm mt-1 ${theme.accent}`}>{theme.subtitle}</p>
+        <div className="px-8 pt-10 pb-6 text-center">
+          <div className="text-7xl mb-3">{theme.emoji}</div>
+          <h3 className="text-3xl font-bold text-white">{theme.title}</h3>
+          <p className={`text-base mt-2 ${theme.accent}`}>{theme.subtitle}</p>
         </div>
-        <div className="flex justify-center pb-6">
-          <div className="rounded-lg bg-white p-3 shadow-xl">
+        <div className="flex justify-center pb-8">
+          <div className="rounded-xl bg-white p-5 shadow-xl">
             <QRCodeSVG
               value={content.qrUrl}
-              size={180}
+              size={260}
               bgColor="#ffffff"
               fgColor="#000000"
               level="M"
@@ -52,8 +52,8 @@ export function QrCard({ content }: { content: QrContent }) {
             />
           </div>
         </div>
-        <div className="bg-black/30 px-4 py-2 text-center text-xs text-white/80">
-          Гар утсаараа scan хийнэ үү
+        <div className="bg-black/30 px-4 py-3 text-center text-sm text-white/90">
+          📱 Гар утсаараа scan хийнэ үү
         </div>
       </div>
       <p className="mt-3 text-sm text-muted-foreground text-center italic">
