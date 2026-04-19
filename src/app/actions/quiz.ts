@@ -1,37 +1,32 @@
 "use server";
 
 /**
- * Server Actions for the Phishing IQ Quiz.
+ * Server Actions for the Phishing IQ Quiz (multi-modal).
  *
- * These run exclusively on the Node.js runtime (Next.js 16 default) and have
- * direct access to the Neon Drizzle client. The client only ever receives
- * `ClientQuestion` payloads — `isPhish`, `explanation`, and `recommendation`
- * are stripped before leaving the server.
+ * - `upsertUserAction` — creates/updates user, returns id (called by home page)
+ * - `startQuiz` — mode-aware question selection, creates test, returns ClientQuestion[]
+ * - `submitAnswer` — polymorphic dispatch via AnswerInput, scores via lib/scoring
+ * - `finishQuiz` — sums answer scores, normalises to 0-100, stamps completedAt
  */
 
 import { eq } from "drizzle-orm";
-import { db, questions } from "@/db";
+import { db } from "@/db";
+import { tests, answers, questions } from "@/db/schema";
 import {
   upsertUser,
-  getQuestionsByAgeGroup,
-  getQuestionsByIds,
-  getPreTestByExperiment,
-  getPostTestByExperiment,
-  getAnswerQuestionIds,
-  createTest,
-  saveAnswer,
-  finishTest,
+  getQuestionsForLeveledMode,
+  getQuestionsForMixedMode,
+  getQuestionsForCategoryMode,
 } from "@/db/queries";
+import { scoreQuestion } from "@/lib/scoring";
 import type { AgeGroup } from "@/lib/constants";
-import {
-  AGE_GROUPS,
-  QUESTIONS_PER_TEST_BY_AGE,
-} from "@/lib/constants";
-import type { ClientQuestion, AnswerFeedback } from "@/lib/types";
-
-// ============================================
-// Input guards
-// ============================================
+import { AGE_GROUPS } from "@/lib/constants";
+import type {
+  AnswerInput,
+  QuizMode,
+  QuestionType,
+  ClientQuestion,
+} from "@/lib/types";
 
 function assertAgeGroup(value: unknown): asserts value is AgeGroup {
   if (
@@ -58,232 +53,138 @@ function assertUuid(value: unknown): asserts value is string {
   }
 }
 
-function assertPositiveInt(value: unknown): asserts value is number {
-  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
-    throw new Error("INVALID_NUMBER");
-  }
-}
-
-// ============================================
-// Fisher–Yates shuffle using crypto randomness
-// ============================================
-
-/**
- * Unbiased Fisher–Yates shuffle driven by `crypto.getRandomValues`.
- * Returns a new array (input is not mutated).
- */
-function cryptoShuffle<T>(arr: readonly T[]): T[] {
-  const out = arr.slice();
-  const n = out.length;
-  if (n <= 1) return out;
-  const rand = new Uint32Array(n);
-  crypto.getRandomValues(rand);
-  for (let i = n - 1; i > 0; i--) {
-    const j = rand[i] % (i + 1);
-    const tmp = out[i];
-    out[i] = out[j];
-    out[j] = tmp;
-  }
-  return out;
-}
-
-// ============================================
-// Strip server-only fields before returning to client
-// ============================================
-
-function toClientQuestion(q: {
-  id: number;
-  ageGroup: AgeGroup;
-  orderIndex: number;
-  category:
-    | "email_phishing"
-    | "sms_smishing"
-    | "voice_vishing"
-    | "url_spoofing"
-    | "social_eng"
-    | "credential_theft"
-    | "other";
-  emailFrom: string;
-  emailSubject: string;
-  emailBody: string;
-  emailUrl: string | null;
-  difficulty: number;
-}): ClientQuestion {
-  return {
-    id: q.id,
-    ageGroup: q.ageGroup,
-    orderIndex: q.orderIndex,
-    category: q.category,
-    emailFrom: q.emailFrom,
-    emailSubject: q.emailSubject,
-    emailBody: q.emailBody,
-    emailUrl: q.emailUrl,
-    difficulty: q.difficulty,
-  };
-}
-
-// ============================================
-// Actions
-// ============================================
-
-/**
- * Start a new quiz.
- *
- * Without `experimentId` → creates a **pre-test** with a new experiment.
- * With `experimentId`    → creates a **post-test** using the same questions
- *                          as the pre-test, re-shuffled.
- */
-export async function startQuiz(input: {
+export async function upsertUserAction(input: {
   userId: string;
   name: string;
   ageGroup: AgeGroup;
-  experimentId?: string;
-}): Promise<{
-  testId: string;
-  experimentId: string;
-  questions: ClientQuestion[];
-}> {
+}): Promise<{ id: string }> {
   assertUuid(input.userId);
   assertName(input.name);
   assertAgeGroup(input.ageGroup);
-
   const user = await upsertUser({
     id: input.userId,
     name: input.name.trim(),
     ageGroup: input.ageGroup,
   });
   if (!user) throw new Error("UPSERT_USER_FAILED");
-
-  // ── POST-TEST ──
-  if (input.experimentId) {
-    assertUuid(input.experimentId);
-
-    const preTest = await getPreTestByExperiment(input.experimentId);
-    if (!preTest) throw new Error("PRE_TEST_NOT_FOUND");
-    if (!preTest.completedAt) throw new Error("PRE_TEST_NOT_COMPLETED");
-
-    const existingPost = await getPostTestByExperiment(input.experimentId);
-    if (existingPost) throw new Error("POST_TEST_ALREADY_EXISTS");
-
-    // Same questions, re-shuffled
-    const questionIds = await getAnswerQuestionIds(preTest.id);
-    if (questionIds.length === 0) throw new Error("NO_PRE_TEST_ANSWERS");
-    const pool = await getQuestionsByIds(questionIds);
-    const shuffled = cryptoShuffle(pool);
-
-    const test = await createTest({
-      userId: user.id,
-      testType: "post",
-      experimentId: input.experimentId,
-      ageGroup: input.ageGroup,
-      totalQuestions: shuffled.length,
-    });
-    if (!test) throw new Error("CREATE_TEST_FAILED");
-
-    return {
-      testId: test.id,
-      experimentId: input.experimentId,
-      questions: shuffled.map(toClientQuestion),
-    };
-  }
-
-  // ── PRE-TEST ──
-  const pool = await getQuestionsByAgeGroup(input.ageGroup);
-  if (pool.length === 0) throw new Error("NO_QUESTIONS_FOR_AGE_GROUP");
-
-  const desired = QUESTIONS_PER_TEST_BY_AGE[input.ageGroup];
-  const shuffled = cryptoShuffle(pool);
-  const sliced = shuffled.slice(0, Math.min(desired, shuffled.length));
-
-  const experimentId = crypto.randomUUID();
-
-  const test = await createTest({
-    userId: user.id,
-    testType: "pre",
-    experimentId,
-    ageGroup: input.ageGroup,
-    totalQuestions: sliced.length,
-  });
-  if (!test) throw new Error("CREATE_TEST_FAILED");
-
-  return {
-    testId: test.id,
-    experimentId,
-    questions: sliced.map(toClientQuestion),
-  };
+  return { id: user.id };
 }
 
-/**
- * Submit a single answer. The correct answer and the explanation live
- * exclusively on the server — they are fetched here, compared against
- * `selectedIsPhish`, then surfaced to the client only as feedback.
- *
- * `selectedIsPhish` is `null` when the question timed out.
- */
-export async function submitAnswer(input: {
-  testId: string;
-  questionId: number;
-  selectedIsPhish: boolean | null;
-  timeTakenMs: number;
-}): Promise<AnswerFeedback> {
-  assertUuid(input.testId);
-  if (!Number.isInteger(input.questionId) || input.questionId <= 0) {
-    throw new Error("INVALID_QUESTION_ID");
-  }
-  if (
-    input.selectedIsPhish !== null &&
-    typeof input.selectedIsPhish !== "boolean"
-  ) {
-    throw new Error("INVALID_SELECTION");
-  }
-  assertPositiveInt(input.timeTakenMs);
+export async function startQuiz(input: {
+  userId: string;
+  ageGroup: AgeGroup;
+  mode: QuizMode;
+  category?: QuestionType;
+  experimentId?: string;
+  testType?: "pre" | "post" | "practice";
+}): Promise<{ testId: string; questions: ClientQuestion[] }> {
+  assertUuid(input.userId);
+  assertAgeGroup(input.ageGroup);
 
-  const rows = await db
+  let qs: ClientQuestion[];
+  if (input.mode === "leveled") {
+    qs = await getQuestionsForLeveledMode(input.ageGroup);
+  } else if (input.mode === "mixed") {
+    qs = await getQuestionsForMixedMode(input.ageGroup);
+  } else {
+    if (!input.category) throw new Error("CATEGORY_REQUIRED");
+    qs = await getQuestionsForCategoryMode(input.ageGroup, input.category);
+  }
+
+  if (qs.length === 0) throw new Error("NO_QUESTIONS_FOR_SELECTION");
+
+  const [test] = await db
+    .insert(tests)
+    .values({
+      userId: input.userId,
+      ageGroup: input.ageGroup,
+      testType: input.testType ?? "practice",
+      experimentId: input.experimentId ?? null,
+      totalQuestions: qs.length,
+    })
+    .returning();
+
+  return { testId: test.id, questions: qs };
+}
+
+export async function submitAnswer(
+  testId: string,
+  input: AnswerInput,
+): Promise<void> {
+  assertUuid(testId);
+
+  if (input.kind === "inbox") {
+    const items = await db
+      .select()
+      .from(questions)
+      .where(eq(questions.batchId, input.batchId));
+    const phishIds = items.filter((i) => i.isPhish).map((i) => i.id);
+    const score = scoreQuestion({
+      type: "inbox_batch",
+      phishIds,
+      selectedIds: input.selectedItemIds,
+    });
+    await db.insert(answers).values({
+      testId,
+      batchId: input.batchId,
+      questionId: null,
+      selectedIsPhish: null,
+      inboxSelections: input.selectedItemIds,
+      score: score.toFixed(3),
+      isCorrect: score >= 0.5,
+      timeTakenMs: Math.round(input.timeTakenMs),
+    });
+    return;
+  }
+
+  const [q] = await db
     .select()
     .from(questions)
-    .where(eq(questions.id, input.questionId))
-    .limit(1);
-  const question = rows[0];
-  if (!question) throw new Error("QUESTION_NOT_FOUND");
+    .where(eq(questions.id, input.questionId));
+  if (!q) throw new Error("QUESTION_NOT_FOUND");
 
-  const isCorrect =
-    input.selectedIsPhish !== null &&
-    input.selectedIsPhish === question.isPhish;
+  const score =
+    input.kind === "browser"
+      ? scoreQuestion({
+          type: "browser",
+          isPhish: q.isPhish,
+          choice: input.choice,
+        })
+      : scoreQuestion({
+          type: q.type as "email" | "sms" | "qr",
+          isPhish: q.isPhish,
+          choice: input.choice,
+        });
 
-  await saveAnswer({
-    testId: input.testId,
+  await db.insert(answers).values({
+    testId,
     questionId: input.questionId,
-    selectedIsPhish: input.selectedIsPhish,
-    isCorrect,
+    selectedIsPhish:
+      input.kind === "binary"
+        ? input.choice === "phish"
+        : input.choice !== "proceed",
+    score: score.toFixed(3),
+    isCorrect: score >= 1,
     timeTakenMs: Math.round(input.timeTakenMs),
   });
-
-  return {
-    isCorrect,
-    correctIsPhish: question.isPhish,
-    explanation: question.explanation,
-    recommendation: question.recommendation,
-  };
 }
 
-/**
- * Finalise a test. Updates score + total time and stamps `completedAt`.
- */
-export async function finishQuiz(input: {
-  testId: string;
-  score: number;
-  totalTimeMs: number;
-}): Promise<{ ok: true }> {
-  assertUuid(input.testId);
-  assertPositiveInt(input.score);
-  assertPositiveInt(input.totalTimeMs);
-
-  const test = await finishTest({
-    testId: input.testId,
-    score: Math.round(input.score),
-    totalTimeMs: Math.round(input.totalTimeMs),
-  });
-  if (!test) throw new Error("FINISH_TEST_FAILED");
-
-  return { ok: true };
+export async function finishQuiz(testId: string): Promise<void> {
+  assertUuid(testId);
+  const rows = await db.select().from(answers).where(eq(answers.testId, testId));
+  const totalScore = rows.reduce((sum, a) => sum + Number(a.score ?? 0), 0);
+  const totalMs = rows.reduce((sum, a) => sum + (a.timeTakenMs ?? 0), 0);
+  const [test] = await db.select().from(tests).where(eq(tests.id, testId));
+  if (!test) return;
+  // Approximate max possible: each question ≤ 1.0, browser bonus +0.1, inbox ≤ 1.0
+  const maxPossible = test.totalQuestions * 1.1;
+  const pct = Math.round((totalScore / maxPossible) * 100);
+  await db
+    .update(tests)
+    .set({
+      score: Math.min(pct, 100),
+      totalTimeMs: totalMs,
+      completedAt: new Date(),
+    })
+    .where(eq(tests.id, testId));
 }
