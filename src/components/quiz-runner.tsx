@@ -26,7 +26,7 @@ type Props = {
 export function QuizRunner({ testId, questions }: Props) {
   const router = useRouter();
   const [idx, setIdx] = useState(0);
-  const [startAt, setStartAt] = useState(Date.now());
+  const [startAt, setStartAt] = useState(() => Date.now());
   const [, startTransition] = useTransition();
   const [isPending, setIsPending] = useState(false);
 
