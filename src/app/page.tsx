@@ -9,19 +9,20 @@ import { AgeGroupSelector } from "@/components/age-group-selector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { startQuiz } from "@/app/actions/quiz";
+import { upsertUserAction, startQuiz } from "@/app/actions/quiz";
 import { getOrCreateUserId } from "@/lib/user-id";
 import type { AgeGroup } from "@/lib/constants";
 import type { ClientQuestion } from "@/lib/types";
 
-/**
- * Persisted payload the quiz runner reads from sessionStorage.
- * Key format: `quiz-${testId}`.
- */
-type QuizStorage = {
+type ExperimentState = {
+  experimentId: string;
+  ageGroup: AgeGroup;
+  userId: string;
+};
+
+type StoredQuiz = {
   testId: string;
   ageGroup: AgeGroup;
-  name: string;
   questions: ClientQuestion[];
 };
 
@@ -30,29 +31,52 @@ export default function Home() {
   const [name, setName] = useState("");
   const [submittedName, setSubmittedName] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [experimentState, setExperimentState] = useState<ExperimentState | null>(null);
 
-  // Experiment state: if the user completed a pre-test, this is set.
-  const [experimentState, setExperimentState] = useState<{
-    experimentId: string;
-    ageGroup: AgeGroup;
-    name: string;
-  } | null>(null);
-
-  // Detect returning post-test user on mount
   useEffect(() => {
-    const stored = localStorage.getItem("phishing-quiz-experiment");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (parsed.experimentId && parsed.ageGroup && parsed.name) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setExperimentState(parsed);
-        }
-      } catch {
-        localStorage.removeItem("phishing-quiz-experiment");
+    const stored = window.localStorage.getItem("phishing-quiz-experiment");
+    if (!stored) return;
+    try {
+      const parsed = JSON.parse(stored) as ExperimentState;
+      if (parsed.experimentId && parsed.ageGroup && parsed.userId) {
+        setExperimentState(parsed);
       }
+    } catch {
+      window.localStorage.removeItem("phishing-quiz-experiment");
     }
   }, []);
+
+  function handlePostTestStart() {
+    if (!experimentState) return;
+    startTransition(async () => {
+      try {
+        const { testId, questions } = await startQuiz({
+          userId: experimentState.userId,
+          ageGroup: experimentState.ageGroup,
+          experimentId: experimentState.experimentId,
+        });
+        const payload: StoredQuiz = {
+          testId,
+          ageGroup: experimentState.ageGroup,
+          questions,
+        };
+        window.sessionStorage.setItem(`quiz-${testId}`, JSON.stringify(payload));
+        window.localStorage.removeItem("phishing-quiz-experiment");
+        setExperimentState(null);
+        router.push(`/quiz/${testId}`);
+      } catch (err) {
+        console.error(err);
+        const message =
+          err instanceof Error ? err.message : "Post-test эхлүүлэхэд алдаа";
+        toast.error(`Алдаа: ${message}`);
+      }
+    });
+  }
+
+  function handleResetExperiment() {
+    window.localStorage.removeItem("phishing-quiz-experiment");
+    setExperimentState(null);
+  }
 
   function handleNameSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -76,77 +100,18 @@ export default function Home() {
     startTransition(async () => {
       try {
         const userId = getOrCreateUserId();
-        const { testId, experimentId, questions } = await startQuiz({
-          userId,
-          name: submittedName,
-          ageGroup,
-        });
-
-        // Store experiment state so post-test can find the pre-test
-        localStorage.setItem(
-          "phishing-quiz-experiment",
-          JSON.stringify({ experimentId, ageGroup, name: submittedName }),
-        );
-
-        const payload: QuizStorage = {
-          testId,
-          ageGroup,
-          name: submittedName,
-          questions,
-        };
-        window.sessionStorage.setItem(
-          `quiz-${testId}`,
-          JSON.stringify(payload),
-        );
-        router.push(`/quiz/${testId}`);
+        await upsertUserAction({ userId, name: submittedName, ageGroup });
+        const qs = new URLSearchParams({ userId, ageGroup });
+        router.push(`/mode?${qs.toString()}`);
       } catch (err) {
         console.error(err);
         const message =
           err instanceof Error
             ? err.message
-            : "Тест эхлүүлэхэд алдаа гарлаа";
+            : "Хэрэглэгчийг бүртгэхэд алдаа гарлаа";
         toast.error(`Алдаа: ${message}`);
       }
     });
-  }
-
-  function handlePostTestStart() {
-    if (!experimentState) return;
-    startTransition(async () => {
-      try {
-        const userId = getOrCreateUserId();
-        const { testId, questions } = await startQuiz({
-          userId,
-          name: experimentState.name,
-          ageGroup: experimentState.ageGroup,
-          experimentId: experimentState.experimentId,
-        });
-
-        const payload: QuizStorage = {
-          testId,
-          ageGroup: experimentState.ageGroup,
-          name: experimentState.name,
-          questions,
-        };
-        window.sessionStorage.setItem(
-          `quiz-${testId}`,
-          JSON.stringify(payload),
-        );
-        localStorage.removeItem("phishing-quiz-experiment");
-        setExperimentState(null);
-        router.push(`/quiz/${testId}`);
-      } catch (err) {
-        console.error(err);
-        const message =
-          err instanceof Error ? err.message : "Post-test эхлүүлэхэд алдаа";
-        toast.error(`Алдаа: ${message}`);
-      }
-    });
-  }
-
-  function handleResetExperiment() {
-    localStorage.removeItem("phishing-quiz-experiment");
-    setExperimentState(null);
   }
 
   return (
@@ -206,18 +171,15 @@ export default function Home() {
           {experimentState ? (
             <div className="flex flex-col gap-5">
               <div className="rounded-lg border border-border/60 bg-white/[0.03] px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">
-                📋 <strong className="text-white">Post-test</strong>
+                📋 <strong className="text-white">Post-test бэлэн</strong>
               </div>
               <div className="text-base text-white">
-                Сайн байна уу,{" "}
-                <span className="font-semibold text-cyan">
-                  {experimentState.name}
-                </span>
-                ! Pre-test дууссан. Одоо Post-test өгнө үү.
+                Pre-test дууссан байна. Post-test өгөхөд бэлэн үү?
               </div>
               <div className="rounded-lg border border-blue-2/30 bg-blue-2/5 px-4 py-3 text-sm text-muted-foreground">
-                Ижил асуултууд өөр дарааллаар гарна. Pre-test-ийн тайлбар,
-                зөвлөмжийг санаж хариулаарай.
+                Post-test нь яг ижил асуултуудыг шинэ дараалалд харуулна. Pre-test-ийн
+                тайлбар, зөвлөмжийг санаж хариулаарай — сурсан зүйлээ шалгах
+                хамгийн сайн арга.
               </div>
               <Button
                 type="button"

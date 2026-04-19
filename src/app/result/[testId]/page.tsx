@@ -7,8 +7,14 @@ import { Card } from "@/components/ui/card";
 import { ConfettiLauncher } from "@/components/confetti-launcher";
 import { PostTestButton } from "@/components/post-test-button";
 import { getTestWithDetails } from "@/db/queries";
-import { AGE_GROUP_ICONS, AGE_GROUP_LABELS } from "@/lib/constants";
+import {
+  AGE_GROUP_ICONS,
+  AGE_GROUP_LABELS,
+  TYPE_ICONS,
+  TYPE_LABELS,
+} from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import type { QuestionType } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: "Үр дүн",
@@ -39,17 +45,26 @@ export default async function ResultPage({ params }: PageProps) {
 
   const { test, user, answers: rows } = data;
   const total = test.totalQuestions;
-  const score = test.score;
-  const pct = total > 0 ? Math.round((score / total) * 100) : 0;
+  // tests.score is now stored as a 0-100 percentage by finishQuiz.
+  const pct = test.score;
+  const correctCount = rows.filter((r) => r.answer.isCorrect).length;
   const totalSeconds = Math.round(test.totalTimeMs / 1000);
   const band = getScoreBand(pct);
 
-  // Derived stat cards — ported from legacy stat-grid (correct / wrong /
-  // phish-caught / avg time).
   const wrong = rows.filter((r) => !r.answer.isCorrect).length;
   const phishCaught = rows.filter(
     (r) => r.question.isPhish && r.answer.isCorrect,
   ).length;
+
+  // Per-type breakdown
+  const byType = new Map<QuestionType, { total: number; correct: number }>();
+  for (const r of rows) {
+    const t = (r.question.type ?? "email") as QuestionType;
+    const entry = byType.get(t) ?? { total: 0, correct: 0 };
+    entry.total += 1;
+    if (r.answer.isCorrect) entry.correct += 1;
+    byType.set(t, entry);
+  }
   const avgSeconds =
     rows.length > 0
       ? Math.round(
@@ -96,11 +111,11 @@ export default async function ResultPage({ params }: PageProps) {
               {/* Score ring — big percent */}
               <div className="mt-8 flex flex-col items-center">
                 <div className="font-mono text-6xl font-extrabold text-white sm:text-7xl">
-                  {score}
+                  {correctCount}
                   <span className="text-[var(--color-text-2)]">/{total}</span>
                 </div>
                 <div className="mt-1 text-sm uppercase tracking-wider text-cyan">
-                  {pct}% зөв
+                  {pct}% оноо
                 </div>
               </div>
 
@@ -118,10 +133,30 @@ export default async function ResultPage({ params }: PageProps) {
             </div>
           </Card>
 
+          {/* Per-type breakdown */}
+          {byType.size > 1 && (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              {[...byType.entries()].map(([type, stat]) => (
+                <div
+                  key={type}
+                  className="rounded-xl border border-[var(--color-border-1)] bg-[var(--color-navy-2)] px-3 py-3 text-center"
+                >
+                  <div className="text-2xl">{TYPE_ICONS[type]}</div>
+                  <div className="mt-1 text-[0.7rem] uppercase tracking-wider text-muted-foreground">
+                    {TYPE_LABELS[type]}
+                  </div>
+                  <div className="mt-1 font-mono text-sm font-bold text-cyan">
+                    {stat.correct}/{stat.total}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Stat grid */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <StatCard
-              value={String(score)}
+              value={String(correctCount)}
               label="✅ Зөв ангилал"
               color="text-[var(--color-green)]"
             />
@@ -198,11 +233,20 @@ export default async function ResultPage({ params }: PageProps) {
                           {a.isCorrect ? "✅" : "❌"}
                         </span>
                         <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className="rounded bg-[var(--color-surface-1)] px-1.5 py-0.5 text-[0.6rem] uppercase tracking-wider text-muted-foreground"
+                              aria-label={TYPE_LABELS[(q.type ?? "email") as QuestionType]}
+                            >
+                              {TYPE_ICONS[(q.type ?? "email") as QuestionType]}{" "}
+                              {TYPE_LABELS[(q.type ?? "email") as QuestionType]}
+                            </span>
+                          </div>
                           <div className="truncate text-sm font-semibold text-white">
-                            {q.emailSubject}
+                            {q.emailSubject || "—"}
                           </div>
                           <div className="truncate font-mono text-xs text-muted-foreground">
-                            {q.emailFrom}
+                            {q.emailFrom || "—"}
                           </div>
                         </div>
                       </div>
@@ -284,7 +328,6 @@ export default async function ResultPage({ params }: PageProps) {
                 </Link>
                 <PostTestButton
                   experimentId={test.experimentId}
-                  name={user.name}
                   ageGroup={test.ageGroup}
                 />
               </>

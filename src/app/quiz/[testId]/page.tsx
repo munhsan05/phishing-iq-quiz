@@ -12,7 +12,6 @@ import type { ClientQuestion } from "@/lib/types";
 type StoredQuiz = {
   testId: string;
   ageGroup: AgeGroup;
-  name: string;
   questions: ClientQuestion[];
 };
 
@@ -96,11 +95,7 @@ export default function QuizPage({ params }: PageProps) {
 
   return (
     <main id="main-content" className="relative z-10 flex flex-1 flex-col px-4 py-10 sm:px-6 sm:py-14">
-      <QuizRunner
-        testId={payload.testId}
-        questions={payload.questions}
-        ageGroup={payload.ageGroup}
-      />
+      <QuizRunner testId={payload.testId} questions={payload.questions} />
     </main>
   );
 }

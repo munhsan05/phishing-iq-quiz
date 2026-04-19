@@ -1,6 +1,16 @@
 import { db, users, questions, tests, answers } from "./index";
+import { inboxBatches } from "./schema";
 import { eq, desc, asc, and, isNotNull, inArray, count, avg, sql, gte } from "drizzle-orm";
-import type { NewUser, NewTest, NewAnswer } from "./schema";
+import type { NewUser, NewTest, NewAnswer, Question, InboxBatch } from "./schema";
+import type {
+  ClientQuestion,
+  QuestionType,
+  EmailContent,
+  SmsContent,
+  QrContent,
+  BrowserContent,
+} from "@/lib/types";
+import type { AgeGroup } from "@/lib/constants";
 
 // ============================================
 // USER OPERATIONS
@@ -381,19 +391,21 @@ export async function getQuestionAnalysis() {
       sql`COUNT(CASE WHEN ${answers.isCorrect} THEN 1 END)::float / NULLIF(COUNT(*), 0)`,
     );
 
-  return rows.map((r) => ({
-    questionId: r.questionId,
-    emailSubject: r.emailSubject,
-    category: r.category,
-    ageGroup: r.ageGroup,
-    isPhish: r.isPhish,
-    totalAnswers: r.totalAnswers,
-    correctCount: Number(r.correctCount),
-    correctRate:
-      r.totalAnswers > 0 ? (Number(r.correctCount) / r.totalAnswers) * 100 : 0,
-    avgTimeMs: Number(r.avgTimeMs),
-    timeoutCount: Number(r.timeoutCount),
-  }));
+  return rows
+    .filter((r): r is typeof r & { questionId: number } => r.questionId !== null)
+    .map((r) => ({
+      questionId: r.questionId,
+      emailSubject: r.emailSubject,
+      category: r.category,
+      ageGroup: r.ageGroup,
+      isPhish: r.isPhish,
+      totalAnswers: r.totalAnswers,
+      correctCount: Number(r.correctCount),
+      correctRate:
+        r.totalAnswers > 0 ? (Number(r.correctCount) / r.totalAnswers) * 100 : 0,
+      avgTimeMs: Number(r.avgTimeMs),
+      timeoutCount: Number(r.timeoutCount),
+    }));
 }
 
 /** Aggregate behavioral metrics: timeouts, response time, completion rate. */
@@ -441,13 +453,15 @@ export async function getBehavioralData() {
       testRow.totalTests > 0
         ? (Number(testRow.completedTests) / testRow.totalTests) * 100
         : 0,
-    perQuestion: perQuestion.map((r) => ({
-      questionId: r.questionId,
-      emailSubject: r.emailSubject,
-      avgTimeMs: Number(r.avgTimeMs),
-      timeoutCount: Number(r.timeoutCount),
-      totalAnswers: r.totalAnswers,
-    })),
+    perQuestion: perQuestion
+      .filter((r): r is typeof r & { questionId: number } => r.questionId !== null)
+      .map((r) => ({
+        questionId: r.questionId,
+        emailSubject: r.emailSubject,
+        avgTimeMs: Number(r.avgTimeMs),
+        timeoutCount: Number(r.timeoutCount),
+        totalAnswers: r.totalAnswers,
+      })),
   };
 }
 
@@ -497,4 +511,127 @@ export async function getAgeGroupBreakdown() {
         r.totalAnswers > 0 ? (Number(r.correctCount) / r.totalAnswers) * 100 : 0,
     })),
   };
+}
+
+// ============================================
+// MULTI-MODAL — answer-stripped projections + mode-aware selection
+// ============================================
+
+export function toClientQuestion(row: Question): ClientQuestion | null {
+  const base = { id: row.id, ageGroup: row.ageGroup, orderIndex: row.orderIndex };
+  switch (row.type) {
+    case "email":
+      return { ...base, type: "email", content: row.content as EmailContent };
+    case "sms":
+      return { ...base, type: "sms", content: row.content as SmsContent };
+    case "qr":
+      return { ...base, type: "qr", content: row.content as QrContent };
+    case "browser":
+      return { ...base, type: "browser", content: row.content as BrowserContent };
+    default:
+      return null;
+  }
+}
+
+export function buildInboxBatchClientQuestion(
+  batch: InboxBatch,
+  items: Question[],
+): Extract<ClientQuestion, { type: "inbox_batch" }> {
+  return {
+    id: batch.id,
+    type: "inbox_batch",
+    ageGroup: batch.ageGroup,
+    context: batch.context ?? undefined,
+    timeLimitSec: batch.timeLimitSec,
+    orderIndex: batch.orderIndex,
+    items: items.map((i) => ({
+      id: i.id,
+      content: i.content as EmailContent,
+      isPhish: i.isPhish,
+    })),
+  };
+}
+
+const PER_TYPE_LIMITS: Record<"email" | "sms" | "qr" | "browser", number> = {
+  email: 5,
+  sms: 3,
+  qr: 3,
+  browser: 3,
+};
+const INBOX_BATCH_LIMIT = 3;
+
+export async function getQuestionsForLeveledMode(
+  ageGroup: AgeGroup,
+): Promise<ClientQuestion[]> {
+  const out: ClientQuestion[] = [];
+  const types = ["email", "sms", "qr", "browser"] as const;
+  for (const type of types) {
+    const rows = await db
+      .select()
+      .from(questions)
+      .where(and(eq(questions.ageGroup, ageGroup), eq(questions.type, type)))
+      .orderBy(sql`random()`)
+      .limit(PER_TYPE_LIMITS[type]);
+    for (const r of rows) {
+      const c = toClientQuestion(r);
+      if (c) out.push(c);
+    }
+  }
+  const batches = await db
+    .select()
+    .from(inboxBatches)
+    .where(eq(inboxBatches.ageGroup, ageGroup))
+    .orderBy(sql`random()`)
+    .limit(INBOX_BATCH_LIMIT);
+  for (const b of batches) {
+    const items = await db
+      .select()
+      .from(questions)
+      .where(eq(questions.batchId, b.id))
+      .orderBy(asc(questions.orderIndex));
+    out.push(buildInboxBatchClientQuestion(b, items));
+  }
+  return out;
+}
+
+export async function getQuestionsForMixedMode(
+  ageGroup: AgeGroup,
+): Promise<ClientQuestion[]> {
+  const arr = await getQuestionsForLeveledMode(ageGroup);
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+export async function getQuestionsForCategoryMode(
+  ageGroup: AgeGroup,
+  category: QuestionType,
+): Promise<ClientQuestion[]> {
+  if (category === "inbox_batch") {
+    const batches = await db
+      .select()
+      .from(inboxBatches)
+      .where(eq(inboxBatches.ageGroup, ageGroup))
+      .orderBy(asc(inboxBatches.orderIndex));
+    const out: ClientQuestion[] = [];
+    for (const b of batches) {
+      const items = await db
+        .select()
+        .from(questions)
+        .where(eq(questions.batchId, b.id))
+        .orderBy(asc(questions.orderIndex));
+      out.push(buildInboxBatchClientQuestion(b, items));
+    }
+    return out;
+  }
+  const rows = await db
+    .select()
+    .from(questions)
+    .where(and(eq(questions.ageGroup, ageGroup), eq(questions.type, category)))
+    .orderBy(asc(questions.orderIndex));
+  return rows
+    .map(toClientQuestion)
+    .filter((q): q is ClientQuestion => q !== null);
 }

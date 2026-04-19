@@ -1,25 +1,23 @@
 "use client";
 
-import type { ClientQuestion } from "@/lib/types";
+import type { EmailContent } from "@/lib/types";
 
 type GmailFrameProps = {
-  question: ClientQuestion;
+  content: EmailContent;
 };
 
 /** Decorative Gmail-inspired frame that wraps each email question. */
-export function GmailFrame({ question }: GmailFrameProps) {
-  const initial = question.emailFrom.charAt(0).toUpperCase();
-  const hue = question.emailFrom
-    .split("")
-    .reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
+export function GmailFrame({ content }: GmailFrameProps) {
+  const initial = content.from.charAt(0).toUpperCase();
+  const hue =
+    content.from.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
 
   return (
     <div
       className="overflow-hidden rounded-lg border border-[#dadce0] bg-white shadow-lg"
       role="article"
-      aria-label={`Имэйл: ${question.emailFrom} — ${question.emailSubject}`}
+      aria-label={`Имэйл: ${content.from} — ${content.subject}`}
     >
-      {/* Gmail top toolbar */}
       <div className="flex items-center gap-3 border-b border-[#dadce0] bg-[#f6f8fc] px-4 py-2">
         <span className="text-[#5f6368] text-lg">☰</span>
         <span className="text-[#c5221f] text-xl font-bold tracking-tight select-none">
@@ -40,7 +38,6 @@ export function GmailFrame({ question }: GmailFrameProps) {
       </div>
 
       <div className="flex">
-        {/* Sidebar (desktop only) — decorative, not clickable */}
         <div className="hidden w-[180px] shrink-0 border-r border-[#dadce0] bg-[#f6f8fc] py-3 md:block">
           <nav className="flex flex-col gap-0.5 px-2 text-[13px]">
             <SidebarItem icon="📥" label="Inbox" count={1} active />
@@ -58,9 +55,7 @@ export function GmailFrame({ question }: GmailFrameProps) {
           </nav>
         </div>
 
-        {/* Email content area */}
         <div className="flex-1 min-w-0">
-          {/* Email action toolbar */}
           <div className="flex items-center justify-between border-b border-[#f0f0f0] px-4 py-1.5 text-[#5f6368]">
             <div className="flex items-center gap-3 text-sm">
               <span title="Буцах">←</span>
@@ -74,10 +69,9 @@ export function GmailFrame({ question }: GmailFrameProps) {
             </div>
           </div>
 
-          {/* Subject line */}
           <div className="border-b border-[#f0f0f0] px-4 py-3 sm:px-6">
             <h2 className="text-lg font-normal text-[#202124] leading-snug">
-              {question.emailSubject}
+              {content.subject}
             </h2>
             <div className="mt-1 flex items-center gap-2">
               <span className="rounded bg-[#f0f0f0] px-2 py-0.5 text-[11px] text-[#5f6368]">
@@ -86,7 +80,6 @@ export function GmailFrame({ question }: GmailFrameProps) {
             </div>
           </div>
 
-          {/* Sender header */}
           <div className="flex items-start gap-3 px-4 py-4 sm:px-6">
             <div
               className="flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
@@ -97,40 +90,42 @@ export function GmailFrame({ question }: GmailFrameProps) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-[#202124]">
-                  {question.emailFrom.split("<")[0].trim()}
+                  {content.from.split("<")[0].trim()}
                 </span>
                 <span className="text-xs text-[#5f6368]">
-                  &lt;{question.emailFrom.includes("<")
-                    ? question.emailFrom.split("<")[1]?.replace(">", "")
-                    : question.emailFrom}&gt;
+                  &lt;
+                  {content.from.includes("<")
+                    ? content.from.split("<")[1]?.replace(">", "")
+                    : content.from}
+                  &gt;
                 </span>
               </div>
-              <div className="text-xs text-[#5f6368]">
-                рүү: оролцогч
-              </div>
+              <div className="text-xs text-[#5f6368]">рүү: оролцогч</div>
             </div>
             <div className="flex shrink-0 items-center gap-2 text-[#5f6368]">
               <span className="text-xs">Яг одоо</span>
-              <span className="cursor-default text-lg" title="Одтой тэмдэглэх">☆</span>
-              <span className="cursor-default" title="Хариулах">↩</span>
+              <span className="cursor-default text-lg" title="Одтой тэмдэглэх">
+                ☆
+              </span>
+              <span className="cursor-default" title="Хариулах">
+                ↩
+              </span>
               <span className="cursor-default">⋮</span>
             </div>
           </div>
 
-          {/* Email body */}
           <div className="px-4 pb-5 text-sm leading-relaxed text-[#3c4043] whitespace-pre-line sm:px-6 sm:pl-[4.5rem]">
-            {question.emailBody}
+            {content.body}
 
-            {question.emailUrl ? (
+            {content.url ? (
               <div className="mt-4">
                 <span className="inline-flex items-center gap-1 rounded border border-[#dadce0] bg-[#f8f9fa] px-2 py-1 font-mono text-xs text-[#1a73e8] hover:bg-[#e8f0fe]">
-                  🔗 {question.emailUrl}
+                  🔗 {content.url}
                 </span>
               </div>
             ) : null}
           </div>
 
-          {/* Reply / Forward footer */}
           <div className="flex items-center gap-3 border-t border-[#f0f0f0] px-4 py-3 sm:px-6 sm:pl-[4.5rem]">
             <button
               type="button"
@@ -153,7 +148,6 @@ export function GmailFrame({ question }: GmailFrameProps) {
   );
 }
 
-/** Sidebar navigation item — purely decorative. */
 function SidebarItem({
   icon,
   label,
@@ -175,9 +169,7 @@ function SidebarItem({
     >
       <span className="text-sm">{icon}</span>
       <span className="flex-1 truncate">{label}</span>
-      {count != null && (
-        <span className="text-xs font-bold">{count}</span>
-      )}
+      {count != null && <span className="text-xs font-bold">{count}</span>}
     </div>
   );
 }
