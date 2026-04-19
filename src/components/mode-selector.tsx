@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -10,21 +11,52 @@ import {
   TYPE_LABELS,
   TYPE_ICONS,
 } from "@/lib/constants";
-import type { QuestionType, QuizMode } from "@/lib/types";
+import type { AgeGroup } from "@/lib/constants";
+import type { ClientQuestion, QuestionType, QuizMode } from "@/lib/types";
+import { startQuiz } from "@/app/actions/quiz";
 
-export function ModeSelector({ userId, ageGroup }: { userId: string; ageGroup: string }) {
+type StoredQuiz = {
+  testId: string;
+  ageGroup: AgeGroup;
+  questions: ClientQuestion[];
+};
+
+export function ModeSelector({
+  userId,
+  ageGroup,
+}: {
+  userId: string;
+  ageGroup: string;
+}) {
   const router = useRouter();
   const [pending, setPending] = useState<QuizMode | null>(null);
 
-  function start(mode: QuizMode, category?: QuestionType) {
+  async function start(mode: QuizMode, category?: QuestionType) {
     setPending(mode);
-    const qs = new URLSearchParams({
-      mode,
-      userId,
-      ageGroup,
-      ...(category && { category }),
-    });
-    router.push(`/quiz/start?${qs.toString()}`);
+    try {
+      const { testId, questions } = await startQuiz({
+        userId,
+        ageGroup: ageGroup as AgeGroup,
+        mode,
+        category,
+      });
+      const payload: StoredQuiz = {
+        testId,
+        ageGroup: ageGroup as AgeGroup,
+        questions,
+      };
+      window.sessionStorage.setItem(
+        `quiz-${testId}`,
+        JSON.stringify(payload),
+      );
+      router.push(`/quiz/${testId}`);
+    } catch (err) {
+      console.error(err);
+      const message =
+        err instanceof Error ? err.message : "Тест эхлүүлэхэд алдаа";
+      toast.error(`Алдаа: ${message}`);
+      setPending(null);
+    }
   }
 
   const modes: { id: QuizMode; emoji: string }[] = [
@@ -51,7 +83,9 @@ export function ModeSelector({ userId, ageGroup }: { userId: string; ageGroup: s
           >
             <div className="text-4xl mb-2">{m.emoji}</div>
             <div className="font-semibold text-lg">{MODE_LABELS[m.id]}</div>
-            <p className="text-sm text-muted-foreground mt-2">{MODE_DESCRIPTIONS[m.id]}</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              {MODE_DESCRIPTIONS[m.id]}
+            </p>
           </button>
         ))}
       </div>

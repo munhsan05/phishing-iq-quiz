@@ -391,19 +391,21 @@ export async function getQuestionAnalysis() {
       sql`COUNT(CASE WHEN ${answers.isCorrect} THEN 1 END)::float / NULLIF(COUNT(*), 0)`,
     );
 
-  return rows.map((r) => ({
-    questionId: r.questionId,
-    emailSubject: r.emailSubject,
-    category: r.category,
-    ageGroup: r.ageGroup,
-    isPhish: r.isPhish,
-    totalAnswers: r.totalAnswers,
-    correctCount: Number(r.correctCount),
-    correctRate:
-      r.totalAnswers > 0 ? (Number(r.correctCount) / r.totalAnswers) * 100 : 0,
-    avgTimeMs: Number(r.avgTimeMs),
-    timeoutCount: Number(r.timeoutCount),
-  }));
+  return rows
+    .filter((r): r is typeof r & { questionId: number } => r.questionId !== null)
+    .map((r) => ({
+      questionId: r.questionId,
+      emailSubject: r.emailSubject,
+      category: r.category,
+      ageGroup: r.ageGroup,
+      isPhish: r.isPhish,
+      totalAnswers: r.totalAnswers,
+      correctCount: Number(r.correctCount),
+      correctRate:
+        r.totalAnswers > 0 ? (Number(r.correctCount) / r.totalAnswers) * 100 : 0,
+      avgTimeMs: Number(r.avgTimeMs),
+      timeoutCount: Number(r.timeoutCount),
+    }));
 }
 
 /** Aggregate behavioral metrics: timeouts, response time, completion rate. */
@@ -451,13 +453,15 @@ export async function getBehavioralData() {
       testRow.totalTests > 0
         ? (Number(testRow.completedTests) / testRow.totalTests) * 100
         : 0,
-    perQuestion: perQuestion.map((r) => ({
-      questionId: r.questionId,
-      emailSubject: r.emailSubject,
-      avgTimeMs: Number(r.avgTimeMs),
-      timeoutCount: Number(r.timeoutCount),
-      totalAnswers: r.totalAnswers,
-    })),
+    perQuestion: perQuestion
+      .filter((r): r is typeof r & { questionId: number } => r.questionId !== null)
+      .map((r) => ({
+        questionId: r.questionId,
+        emailSubject: r.emailSubject,
+        avgTimeMs: Number(r.avgTimeMs),
+        timeoutCount: Number(r.timeoutCount),
+        totalAnswers: r.totalAnswers,
+      })),
   };
 }
 
