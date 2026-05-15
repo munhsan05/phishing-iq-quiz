@@ -4,7 +4,6 @@ import "./globals.css";
 import { CanvasBackground } from "@/components/canvas-background";
 import { Toaster } from "@/components/ui/sonner";
 import { SiteNav } from "@/components/site-nav";
-import { SiteFooter } from "@/components/site-footer";
 
 // Sora — primary UI font, matches legacy index.html.
 // Mapped to --font-sans so shadcn/ui components inherit it.
@@ -77,7 +76,6 @@ export default function RootLayout({
         <CanvasBackground />
         <SiteNav />
         <main className="flex-1">{children}</main>
-        <SiteFooter />
         <Toaster position="top-center" richColors />
       </body>
     </html>

@@ -65,7 +65,7 @@ export function AgeGroupSelector({
             >
               {AGE_GROUP_ICONS[ageGroup]}
             </span>
-            <span className="text-2xl font-bold tracking-wide text-slate-900 md:text-3xl">
+            <span className="text-lg font-bold tracking-wide text-slate-900 md:text-xl">
               {AGE_GROUP_LABELS[ageGroup]}
             </span>
             <span className="text-sm text-slate-500">
