@@ -156,7 +156,7 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
           <span className="text-xs uppercase tracking-wider text-muted-foreground">
             Насны бүлэг {ageGroup}
           </span>
-          <span className="font-mono text-base font-bold text-white sm:text-lg">
+          <span className="font-mono text-base font-bold text-slate-900 sm:text-lg">
             Асуулт {currentIndex + 1}/{total}
           </span>
         </div>
@@ -180,9 +180,9 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
           paused={phase !== "question"}
         />
         {/* Progress bar across questions */}
-        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
+        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-200">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-blue to-cyan transition-all duration-300"
+            className="h-full rounded-full bg-cyan-500 transition-all duration-300"
             style={{
               width: `${(((currentIndex + (phase === "feedback" ? 1 : 0)) / total) * 100).toFixed(2)}%`,
             }}
@@ -277,15 +277,15 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
       {/* Keyboard hint */}
       <div className="text-center text-xs text-muted-foreground" aria-hidden="true">
         Гарын товчлол:{" "}
-        <kbd className="rounded border border-border bg-white/5 px-1.5 py-0.5 font-mono text-[0.65rem]">
+        <kbd className="rounded border border-border bg-slate-100 px-1.5 py-0.5 font-mono text-[0.65rem]">
           P
         </kbd>{" "}
         — Фишинг,{" "}
-        <kbd className="rounded border border-border bg-white/5 px-1.5 py-0.5 font-mono text-[0.65rem]">
+        <kbd className="rounded border border-border bg-slate-100 px-1.5 py-0.5 font-mono text-[0.65rem]">
           L
         </kbd>{" "}
         — Жинхэнэ,{" "}
-        <kbd className="rounded border border-border bg-white/5 px-1.5 py-0.5 font-mono text-[0.65rem]">
+        <kbd className="rounded border border-border bg-slate-100 px-1.5 py-0.5 font-mono text-[0.65rem]">
           Enter
         </kbd>{" "}
         — Дараагийн

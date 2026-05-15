@@ -62,14 +62,15 @@ export type AgeGroupRadarData = {
 // Shared styles
 // ============================================
 
-const CARD = "rounded-xl border border-[var(--color-border-1)] bg-[var(--color-navy-2)] p-5";
+const CARD = "rounded-xl border border-slate-200 bg-white p-5 shadow-sm";
 const HEADING = "mb-4 font-mono text-xs uppercase tracking-wider text-muted-foreground";
 const TOOLTIP_STYLE = {
-  backgroundColor: "#1a1f36",
-  border: "1px solid rgba(255,255,255,0.1)",
+  backgroundColor: "#ffffff",
+  border: "1px solid #e2e8f0",
   borderRadius: 8,
+  boxShadow: "0 2px 8px rgba(15,23,42,0.08)",
 };
-const TICK = { fill: "#9ca3af", fontSize: 12 };
+const TICK = { fill: "#475569", fontSize: 12 };
 
 // ============================================
 // Trend Line Chart (Overview)
@@ -87,13 +88,13 @@ export function TrendLineChart({
       <h3 className={HEADING}>{title}</h3>
       <ResponsiveContainer width="100%" height={280}>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,23,42,0.06)" />
           <XAxis dataKey="date" tick={TICK} />
           <YAxis yAxisId="left" tick={TICK} />
           <YAxis yAxisId="right" orientation="right" tick={TICK} unit="%" domain={[0, 100]} />
-          <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: "#fff" }} />
+          <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={{ color: "#0f172a" }} />
           <Legend />
-          <Line yAxisId="left" type="monotone" dataKey="testCount" name="Тестийн тоо" stroke="#06d6f5" strokeWidth={2} dot={{ r: 3 }} />
+          <Line yAxisId="left" type="monotone" dataKey="testCount" name="Тестийн тоо" stroke="#06b6d4" strokeWidth={2} dot={{ r: 3 }} />
           <Line yAxisId="right" type="monotone" dataKey="avgScorePct" name="Дундаж оноо (%)" stroke="#34d399" strokeWidth={2} dot={{ r: 3 }} />
         </LineChart>
       </ResponsiveContainer>
@@ -111,15 +112,15 @@ export function PrePostScatterChart({ data }: { data: PrePostPair[] }) {
       <h3 className={HEADING}>Хэрэглэгч бүрийн ахиц (Pre vs Post)</h3>
       <ResponsiveContainer width="100%" height={300}>
         <ScatterChart>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,23,42,0.06)" />
           <XAxis type="number" dataKey="prePct" name="Pre-test %" domain={[0, 100]} tick={TICK} unit="%" />
           <YAxis type="number" dataKey="postPct" name="Post-test %" domain={[0, 100]} tick={TICK} unit="%" />
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
-            labelStyle={{ color: "#fff" }}
+            labelStyle={{ color: "#0f172a" }}
             formatter={(value) => [`${value ?? ""}%`]}
           />
-          <Scatter data={data} fill="#06d6f5">
+          <Scatter data={data} fill="#06b6d4">
             {data.map((entry, i) => (
               <Cell
                 key={i}
@@ -151,12 +152,12 @@ export function DifficultyBarChart({ data }: { data: QuestionDifficulty[] }) {
       <h3 className={HEADING}>Асуулт тус бүрийн зөв хариултын хувь</h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={truncated}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,23,42,0.06)" />
           <XAxis dataKey="label" tick={TICK} />
           <YAxis domain={[0, 100]} tick={TICK} unit="%" />
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
-            labelStyle={{ color: "#fff" }}
+            labelStyle={{ color: "#0f172a" }}
             formatter={(value) => [
               typeof value === "number" ? `${value.toFixed(1)}%` : `${value ?? ""}%`,
             ]}
@@ -196,12 +197,12 @@ export function ResponseTimeBarChart({ data }: { data: ResponseTimeData[] }) {
       <h3 className={HEADING}>Асуулт тус бүрийн дундаж хариулах хугацаа</h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={formatted}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,23,42,0.06)" />
           <XAxis dataKey="label" tick={TICK} />
           <YAxis tick={TICK} unit="с" />
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
-            labelStyle={{ color: "#fff" }}
+            labelStyle={{ color: "#0f172a" }}
             formatter={(value) => [`${value ?? ""}с`]}
             labelFormatter={(label) => {
               const key = String(label ?? "");
@@ -209,7 +210,7 @@ export function ResponseTimeBarChart({ data }: { data: ResponseTimeData[] }) {
               return item ? item.emailSubject : key;
             }}
           />
-          <Bar dataKey="avgTimeSec" name="Дундаж хугацаа" fill="#06d6f5" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="avgTimeSec" name="Дундаж хугацаа" fill="#06b6d4" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -222,7 +223,7 @@ export function ResponseTimeBarChart({ data }: { data: ResponseTimeData[] }) {
 
 const AGE_COLORS: Record<string, string> = {
   "6-18": "#f87171",
-  "18-35": "#06d6f5",
+  "18-35": "#06b6d4",
   "35-60+": "#34d399",
 };
 
@@ -234,7 +235,7 @@ export function AgeGroupRadarChart({ data }: { data: AgeGroupRadarData[] }) {
       <h3 className={HEADING}>Насны бүлгийн категори тусын зөв хариулт</h3>
       <ResponsiveContainer width="100%" height={350}>
         <RadarChart data={data} cx="50%" cy="50%" outerRadius="70%">
-          <PolarGrid stroke="rgba(255,255,255,0.1)" />
+          <PolarGrid stroke="rgba(15,23,42,0.08)" />
           <PolarAngleAxis dataKey="category" tick={{ fill: "#9ca3af", fontSize: 11 }} />
           <PolarRadiusAxis domain={[0, 100]} tick={{ fill: "#6b7280", fontSize: 10 }} />
           {ageGroups.map((ag) => (
@@ -268,11 +269,11 @@ export function StatCard({
   sub?: string;
 }) {
   return (
-    <div className="rounded-xl border border-[var(--color-border-1)] bg-[var(--color-navy-2)] p-5">
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="text-xs uppercase tracking-wider text-muted-foreground">
         {label}
       </div>
-      <div className="mt-1 font-mono text-3xl font-extrabold text-white">
+      <div className="mt-1 font-mono text-3xl font-extrabold text-slate-900">
         {value}
       </div>
       {sub ? (
