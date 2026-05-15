@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function CheckPage() {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10">
+    <main className="mx-auto max-w-2xl px-4 py-12 md:py-16">
       <Link
         href="/"
         className="mb-6 inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900"
@@ -25,7 +25,9 @@ export default function CheckPage() {
         </p>
       </header>
 
-      <AIEmailCheckForm />
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+        <AIEmailCheckForm />
+      </div>
 
       <p className="mt-8 text-xs text-slate-500">
         Хязгаар: өдөрт 10 шалгалт. AI алдаа гаргаж болзошгүй — эцсийн шийдвэр

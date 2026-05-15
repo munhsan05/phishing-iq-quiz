@@ -153,8 +153,8 @@ export default function Home() {
   }
 
   return (
-    <main id="main-content" className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-16">
-      <div className="w-full max-w-3xl">
+    <main id="main-content" className="relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-6 py-10 md:py-16">
+      <div className="w-full max-w-5xl">
         {/* Academic header */}
         <div className="mb-6 text-center text-xs uppercase tracking-[0.2em] text-muted-foreground">
           ШУТИС · Кибер аюулгүй байдлын тэнхим · 2026
@@ -321,12 +321,12 @@ export default function Home() {
         )}
 
         {/* Safety tips — always visible */}
-        <div className="mt-10">
+        <div className="mt-12 md:mt-16">
           <SafetyTipsGrid />
         </div>
 
         {/* Leaderboard link */}
-        <div className="mt-8 text-center">
+        <div className="mt-12 text-center">
           <Link
             href="/leaderboard"
             className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-5 py-2 text-sm text-muted-foreground backdrop-blur transition-colors hover:border-accent/60 hover:text-slate-900"

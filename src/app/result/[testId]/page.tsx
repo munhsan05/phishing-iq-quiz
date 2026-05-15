@@ -62,8 +62,8 @@ export default async function ResultPage({ params }: PageProps) {
   return (
     <>
       <ConfettiLauncher shouldFire={pct >= 70} />
-      <main id="main-content" className="relative z-10 flex flex-1 flex-col items-center px-4 py-10 sm:px-6 sm:py-14">
-        <div className="w-full max-w-3xl space-y-6">
+      <main id="main-content" className="mx-auto max-w-5xl relative z-10 flex flex-1 flex-col items-center px-4 py-10 md:py-16 sm:px-6">
+        <div className="w-full max-w-5xl space-y-8">
           {/* Hero card */}
           <Card className="bg-white border border-slate-200 shadow-sm p-6 sm:p-8">
             <div className="flex flex-col items-center text-center">
@@ -179,7 +179,7 @@ export default async function ResultPage({ params }: PageProps) {
                   <li
                     key={a.id}
                     className={cn(
-                      "rounded-xl border p-4",
+                      "rounded-xl border px-6 py-5",
                       a.isCorrect
                         ? "border-emerald-200 bg-emerald-50"
                         : "border-red-200 bg-red-50",
