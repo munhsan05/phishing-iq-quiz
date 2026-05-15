@@ -6,8 +6,6 @@ import { useState, useEffect, useTransition, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { AgeGroupSelector } from "@/components/age-group-selector";
-import { HomeCtaSplit } from "@/components/home-cta-split";
-import { SafetyTipsGrid } from "@/components/safety-tips-grid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,7 +30,6 @@ export default function Home() {
   const [name, setName] = useState("");
   const [submittedName, setSubmittedName] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [showAgeSelector, setShowAgeSelector] = useState(false);
 
   // Experiment state: if the user completed a pre-test, this is set.
   const [experimentState, setExperimentState] = useState<{
@@ -275,11 +272,11 @@ export default function Home() {
                 <span>🔒 Дахин өгөх</span>
               </div>
             </form>
-          ) : showAgeSelector ? (
+          ) : (
             <div className="flex flex-col gap-5">
               <button
                 type="button"
-                onClick={() => setShowAgeSelector(false)}
+                onClick={() => setSubmittedName(null)}
                 className="self-start text-xs uppercase tracking-wider text-muted-foreground hover:text-slate-900"
                 disabled={isPending}
               >
@@ -305,24 +302,7 @@ export default function Home() {
                 </div>
               ) : null}
             </div>
-          ) : (
-            <HomeCtaSplit
-              quizHref="#"
-              onQuizClick={() => setShowAgeSelector(true)}
-            />
           )}
-        </div>
-
-        {/* CTA split — shown below login card when name not yet submitted */}
-        {!experimentState && !submittedName && (
-          <div className="mx-auto mt-6 w-full max-w-xl">
-            <HomeCtaSplit quizHref="#" quizDisabled onQuizClick={() => {}} />
-          </div>
-        )}
-
-        {/* Safety tips — always visible */}
-        <div className="mt-12 md:mt-16">
-          <SafetyTipsGrid />
         </div>
 
         {/* Leaderboard link */}
