@@ -53,8 +53,8 @@ export function AgeGroupSelector({
           className={cn(
             "group/age relative cursor-pointer select-none overflow-hidden border border-border/60 bg-card/60 p-6 text-center backdrop-blur",
             "transition-all duration-300 ease-out",
-            "hover:-translate-y-1 hover:border-accent/60 hover:shadow-[0_0_32px_rgba(6,214,245,0.18)]",
-            "focus-visible:-translate-y-1 focus-visible:border-accent/60 focus-visible:shadow-[0_0_32px_rgba(6,214,245,0.25)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50",
+            "hover:-translate-y-1 hover:border-cyan-400 hover:shadow-lg hover:shadow-[0_0_32px_rgba(6,214,245,0.18)]",
+            "focus-visible:-translate-y-1 focus-visible:border-cyan-400 focus-visible:shadow-lg focus-visible:shadow-[0_0_32px_rgba(6,214,245,0.25)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50",
             "aria-disabled:pointer-events-none aria-disabled:opacity-50",
           )}
         >
@@ -65,10 +65,10 @@ export function AgeGroupSelector({
             >
               {AGE_GROUP_ICONS[ageGroup]}
             </span>
-            <span className="font-mono text-xl font-bold tracking-wider text-white">
+            <span className="text-2xl font-bold tracking-wide text-slate-900 md:text-3xl">
               {AGE_GROUP_LABELS[ageGroup]}
             </span>
-            <span className="text-sm uppercase tracking-wide text-muted-foreground">
+            <span className="text-sm text-slate-500">
               {AGE_GROUP_SUBLABELS[ageGroup]}
             </span>
             <Button
