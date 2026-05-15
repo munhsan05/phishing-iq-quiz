@@ -64,8 +64,8 @@ export function AIEmailCheckForm() {
           className="resize-y"
           aria-label="Имэйлийн агуулга"
         />
-        <div className="flex items-center justify-between text-xs text-white/60">
-          <span className={overLimit ? "text-red-400" : ""}>
+        <div className="flex items-center justify-between text-xs text-slate-500">
+          <span className={overLimit ? "text-red-600" : ""}>
             {text.length} / {MAX_CHARS}
           </span>
           <Button type="submit" disabled={disabled}>
@@ -81,16 +81,16 @@ export function AIEmailCheckForm() {
       </form>
 
       {error && (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
       {result && (
-        <div className="space-y-3 rounded-lg border border-white/10 bg-white/5 p-4">
+        <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
           <VerdictBadge verdict={result.verdict} confidence={result.confidence} />
-          <p className="text-sm leading-relaxed text-white/85">{result.summary}</p>
-          <p className="text-xs text-white/50">
+          <p className="text-sm leading-relaxed text-slate-800">{result.summary}</p>
+          <p className="text-xs text-slate-500">
             Үлдсэн шалгалт өнөөдөр: {result.remaining}
           </p>
         </div>
