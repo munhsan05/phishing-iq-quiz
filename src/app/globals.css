@@ -2,43 +2,49 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
 
 /* ============================================
-   TAILWIND V4 THEME — navy / cyan phishing quiz
-   Ported from legacy `index.html` <style>:root { ... }
+   TAILWIND V4 THEME — light slate-50 / cyan phishing quiz
    ============================================ */
 @theme {
-  --color-navy: #060d1a;
-  --color-navy-2: #0b1726;
-  --color-navy-3: #0f2240;
+  /* ============================================
+     Page + surfaces
+     ============================================ */
+  --color-bg: #f8fafc;            /* slate-50 — page background */
+  --color-surface: #ffffff;        /* primary card */
+  --color-surface-2: #f1f5f9;      /* subtle hover / section */
 
-  --color-blue: #1a6cf6;
-  --color-blue-2: #3b82f6;
+  /* ============================================
+     Borders
+     ============================================ */
+  --color-border: #e2e8f0;         /* slate-200 — default */
+  --color-border-strong: #cbd5e1;  /* slate-300 — emphasis */
 
-  --color-cyan: #06d6f5;
-  --color-cyan-dim: rgba(6, 214, 245, 0.15);
+  /* ============================================
+     Text
+     ============================================ */
+  --color-text-1: #0f172a;         /* slate-900 — primary */
+  --color-text-2: #475569;         /* slate-600 — secondary */
+  --color-text-3: #94a3b8;         /* slate-400 — muted */
 
-  --color-green: #00e5a0;
-  --color-green-dim: rgba(0, 229, 160, 0.15);
+  /* ============================================
+     Brand cyan (хадгалсан)
+     ============================================ */
+  --color-cyan: #06b6d4;
+  --color-cyan-2: #0891b2;
+  --color-cyan-soft: #ecfeff;
 
-  --color-red: #ff3d5a;
-  --color-red-dim: rgba(255, 61, 90, 0.15);
+  /* ============================================
+     Status (light bg-д тааруулсан)
+     ============================================ */
+  --color-red: #dc2626;
+  --color-amber: #d97706;
+  --color-emerald: #059669;
+  --color-yellow: #ca8a04;
 
-  --color-yellow: #fbbf24;
-  --color-white: #ffffff;
-
-  --color-text-1: #e8f0fe;
-  --color-text-2: #8ea8c8;
-  --color-text-3: #4a6380;
-
-  --color-surface-1: rgba(255, 255, 255, 0.04);
-  --color-surface-2: rgba(255, 255, 255, 0.08);
-  --color-surface-3: rgba(255, 255, 255, 0.12);
-
-  --color-border-1: rgba(255, 255, 255, 0.08);
-  --color-border-2: rgba(255, 255, 255, 0.14);
-
+  /* ============================================
+     Radii (өмнөхөөс хэвээр)
+     ============================================ */
   --radius-md-quiz: 14px;
   --radius-lg-quiz: 20px;
   --radius-xl-quiz: 28px;
@@ -46,41 +52,31 @@
 
 /* ============================================
    ROOT / SHADCN VARIABLES
-   Navy-themed overrides for shadcn tokens.
-   Using oklch to match shadcn conventions and our navy palette.
+   Light slate-50 theme — oklch light variant.
    ============================================ */
 :root {
-  --blue-glow: rgba(26, 108, 246, 0.35);
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* Navy background / light text (dark-mode by default) */
-  --background: oklch(0.125 0.03 260); /* navy #060d1a */
-  --foreground: oklch(0.96 0.015 240); /* text-1 #e8f0fe */
-
-  --card: oklch(0.18 0.04 255); /* navy-3 #0f2240 */
-  --card-foreground: oklch(0.96 0.015 240);
-  --popover: oklch(0.18 0.04 255);
-  --popover-foreground: oklch(0.96 0.015 240);
-
-  --primary: oklch(0.55 0.22 260); /* blue #1a6cf6 */
+  --background: oklch(0.985 0.005 247);
+  --foreground: oklch(0.165 0.03 257);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.165 0.03 257);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.165 0.03 257);
+  --primary: oklch(0.68 0.13 200);
   --primary-foreground: oklch(1 0 0);
-
-  --secondary: oklch(0.16 0.03 255); /* navy-2 #0b1726 */
-  --secondary-foreground: oklch(0.96 0.015 240);
-
-  --muted: oklch(0.16 0.03 255);
-  --muted-foreground: oklch(0.7 0.04 240); /* text-2 #8ea8c8 */
-
-  --accent: oklch(0.78 0.14 210); /* cyan #06d6f5 */
-  --accent-foreground: oklch(0.125 0.03 260);
-
-  --destructive: oklch(0.63 0.23 15); /* red #ff3d5a */
+  --secondary: oklch(0.96 0.01 247);
+  --secondary-foreground: oklch(0.165 0.03 257);
+  --muted: oklch(0.96 0.01 247);
+  --muted-foreground: oklch(0.46 0.04 257);
+  --accent: oklch(0.93 0.04 200);
+  --accent-foreground: oklch(0.165 0.03 257);
+  --destructive: oklch(0.57 0.21 25);
   --destructive-foreground: oklch(1 0 0);
-
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.78 0.14 210); /* cyan */
-  --radius: 0.875rem;
+  --border: oklch(0.91 0.015 247);
+  --input: oklch(0.91 0.015 247);
+  --ring: oklch(0.68 0.13 200);
+  --radius: 0.75rem;
 
   --chart-1: oklch(0.55 0.22 260);
   --chart-2: oklch(0.78 0.14 210);
@@ -88,49 +84,16 @@
   --chart-4: oklch(0.7 0.2 80);
   --chart-5: oklch(0.63 0.23 15);
 
-  --sidebar: oklch(0.16 0.03 255);
-  --sidebar-foreground: oklch(0.96 0.015 240);
-  --sidebar-primary: oklch(0.55 0.22 260);
+  --sidebar: oklch(0.96 0.01 247);
+  --sidebar-foreground: oklch(0.165 0.03 257);
+  --sidebar-primary: oklch(0.68 0.13 200);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.78 0.14 210);
-  --sidebar-accent-foreground: oklch(0.125 0.03 260);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.78 0.14 210);
+  --sidebar-accent: oklch(0.93 0.04 200);
+  --sidebar-accent-foreground: oklch(0.165 0.03 257);
+  --sidebar-border: oklch(0.91 0.015 247);
+  --sidebar-ring: oklch(0.68 0.13 200);
 }
 
-.dark {
-  --background: oklch(0.125 0.03 260);
-  --foreground: oklch(0.96 0.015 240);
-  --card: oklch(0.18 0.04 255);
-  --card-foreground: oklch(0.96 0.015 240);
-  --popover: oklch(0.18 0.04 255);
-  --popover-foreground: oklch(0.96 0.015 240);
-  --primary: oklch(0.55 0.22 260);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.16 0.03 255);
-  --secondary-foreground: oklch(0.96 0.015 240);
-  --muted: oklch(0.16 0.03 255);
-  --muted-foreground: oklch(0.7 0.04 240);
-  --accent: oklch(0.78 0.14 210);
-  --accent-foreground: oklch(0.125 0.03 260);
-  --destructive: oklch(0.63 0.23 15);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.78 0.14 210);
-  --chart-1: oklch(0.55 0.22 260);
-  --chart-2: oklch(0.78 0.14 210);
-  --chart-3: oklch(0.75 0.18 160);
-  --chart-4: oklch(0.7 0.2 80);
-  --chart-5: oklch(0.63 0.23 15);
-  --sidebar: oklch(0.16 0.03 255);
-  --sidebar-foreground: oklch(0.96 0.015 240);
-  --sidebar-primary: oklch(0.55 0.22 260);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.78 0.14 210);
-  --sidebar-accent-foreground: oklch(0.125 0.03 260);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.78 0.14 210);
-}
 
 /* ============================================
    Map shadcn tokens into Tailwind @theme inline
@@ -198,12 +161,29 @@
     @apply font-sans;
   }
 
+  @keyframes mesh-drift {
+    0%   { background-position: 0% 50%, 100% 50%, 0% 0%; }
+    50%  { background-position: 30% 70%, 70% 30%, 0% 0%; }
+    100% { background-position: 0% 50%, 100% 50%, 0% 0%; }
+  }
+
   html,
   body {
-    background: var(--color-navy);
     color: var(--color-text-1);
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+    background:
+      radial-gradient(ellipse 900px 700px at 15% 0%, rgba(6, 182, 212, 0.28) 0%, transparent 55%),
+      radial-gradient(ellipse 900px 700px at 85% 100%, rgba(168, 85, 247, 0.22) 0%, transparent 55%),
+      radial-gradient(ellipse 700px 500px at 50% 50%, rgba(251, 191, 36, 0.10) 0%, transparent 60%),
+      linear-gradient(180deg, #ffffff 0%, #eef2f6 100%);
+    background-size: 200% 200%, 200% 200%, 200% 200%, 100% 100%;
+    background-attachment: fixed;
+    animation: mesh-drift 20s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html, body { animation: none; }
   }
 
   body {
@@ -211,8 +191,20 @@
     position: relative;
     overflow-x: hidden;
     line-height: 1.6;
-    @apply bg-background text-foreground;
+    @apply text-foreground;
   }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(15, 23, 42, 0.045) 1px, transparent 1px);
+    background-size: 24px 24px;
+    z-index: 0;
+  }
+
+  body > * { position: relative; z-index: 1; }
 
   button {
     cursor: pointer;
@@ -238,17 +230,7 @@ main {
 /* Honor reduced motion preference — the CanvasBg component also skips RAF */
 @media (prefers-reduced-motion: reduce) {
   #bg-canvas {
-    background: radial-gradient(
-        ellipse at top,
-        rgba(26, 108, 246, 0.12),
-        transparent 60%
-      ),
-      radial-gradient(
-        ellipse at bottom,
-        rgba(6, 214, 245, 0.08),
-        transparent 60%
-      ),
-      var(--color-navy);
+    background: var(--color-bg);
   }
 }
 
@@ -258,7 +240,7 @@ main {
 
 /* Focus-visible ring for all interactive elements */
 :focus-visible {
-  outline: 2px solid var(--color-cyan, #06d6f5);
+  outline: 2px solid var(--color-cyan, #06b6d4);
   outline-offset: 2px;
 }
 
@@ -272,4 +254,43 @@ main {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ============================================
+   ANSWER FLASH OVERLAY
+   ============================================ */
+@keyframes flash-fade {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.animate-flash-fade {
+  animation: flash-fade 700ms ease-out forwards;
+}
+
+/* ============================================
+   DECORATIVE FLOATING ORBS (CSS-only, no JS)
+   ============================================ */
+@keyframes orb-drift {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(20px, -30px); }
+  66% { transform: translate(-20px, 30px); }
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle 360px at 12% 18%, rgba(6, 182, 212, 0.35), transparent 70%),
+    radial-gradient(circle 420px at 88% 72%, rgba(168, 85, 247, 0.28), transparent 70%),
+    radial-gradient(circle 300px at 50% 90%, rgba(251, 191, 36, 0.20), transparent 70%),
+    radial-gradient(circle 280px at 70% 10%, rgba(16, 185, 129, 0.20), transparent 70%);
+  z-index: 0;
+  animation: orb-drift 30s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::after { animation: none; }
 }

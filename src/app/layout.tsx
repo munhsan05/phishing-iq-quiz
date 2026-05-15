@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { Sora, JetBrains_Mono } from "next/font/google";
+import { Roboto, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { CanvasBackground } from "@/components/canvas-background";
 import { Toaster } from "@/components/ui/sonner";
+import { SiteNav } from "@/components/site-nav";
 
 // Sora — primary UI font, matches legacy index.html.
 // Mapped to --font-sans so shadcn/ui components inherit it.
-const sora = Sora({
+const sora = Roboto({
   variable: "--font-sans",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "700"],
   display: "swap",
 });
 
@@ -22,13 +23,13 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://phishing-iq.vercel.app"),
+  metadataBase: new URL("https://phishing-iq-quiz.vercel.app"),
   title: {
     default: "Фишинг IQ тест",
     template: "%s · Фишинг IQ тест",
   },
   description:
-    "Монгол хэрэглэгчдийн фишинг имэйл илрүүлэх чадварыг шалгах интерактив тест. ШУТИС — Кибер аюулгүй байдлын тэнхим.",
+    "Монгол хэлээр зориулсан фишинг таних чадварын тест болон AI имэйл шалгах хэрэгсэл. Бакалаврын дипломын ажил.",
   applicationName: "Фишинг IQ тест",
   authors: [{ name: "П.Мөнхсан" }],
   keywords: [
@@ -41,18 +42,17 @@ export const metadata: Metadata = {
     "ШУТИС",
   ],
   openGraph: {
-    type: "website",
-    locale: "mn_MN",
     title: "Фишинг IQ тест",
     description:
-      "Жинхэнэ имэйл болон фишинг халдлагыг ялган таних чадвараа шалгаарай.",
+      "Монгол хэрэглэгчдийн фишинг таних чадварыг үнэлэх 41 асуулттай тест + AI имэйл шалгах.",
+    type: "website",
+    locale: "mn_MN",
     siteName: "Фишинг IQ тест",
   },
   twitter: {
     card: "summary_large_image",
     title: "Фишинг IQ тест",
-    description:
-      "Жинхэнэ имэйл болон фишинг халдлагыг ялган таних чадвараа шалгаарай.",
+    description: "Фишинг таних чадварын тест болон AI имэйл шалгах.",
   },
 };
 
@@ -74,7 +74,8 @@ export default function RootLayout({
           Агуулга руу алгасах
         </a>
         <CanvasBackground />
-        {children}
+        <SiteNav />
+        <main className="flex-1">{children}</main>
         <Toaster position="top-center" richColors />
       </body>
     </html>

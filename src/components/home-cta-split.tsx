@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Bot, GraduationCap, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Props = {
   quizHref: string;
@@ -26,6 +27,7 @@ export function HomeCtaSplit({ quizHref, quizDisabled, onQuizClick }: Props) {
         body="Сэжигтэй имэйлээ AI-аар 1 секундэд шалгана."
         cta="Шалгах"
         href="/check"
+        variant="brand"
       />
     </div>
   );
@@ -36,6 +38,7 @@ type CardProps = {
   title: string;
   body: string;
   cta: string;
+  variant?: "default" | "brand";
 } & (
   | { as: "button"; disabled?: boolean; onClick?: () => void }
   | { as: "link"; href: string }
@@ -43,12 +46,25 @@ type CardProps = {
 
 function CtaCard(props: CardProps) {
   const { icon: Icon, title, body, cta } = props;
+  const isBrand = props.variant === "brand";
   const inner = (
-    <div className="flex h-full flex-col gap-3 rounded-xl border border-white/15 bg-white/5 p-5 text-left transition hover:border-cyan-400/40 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50">
-      <Icon className="h-7 w-7 text-cyan-300" aria-hidden />
-      <h3 className="text-lg font-bold text-white">{title}</h3>
-      <p className="flex-1 text-sm text-white/70">{body}</p>
-      <span className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-300">
+    <div className={cn(
+      "flex h-full flex-col gap-3 rounded-xl p-5 text-left transition disabled:cursor-not-allowed disabled:opacity-50",
+      isBrand
+        ? "border border-cyan-600 bg-gradient-to-br from-cyan-500 to-cyan-600 shadow-lg shadow-cyan-500/20 hover:shadow-xl hover:shadow-cyan-500/30"
+        : "border border-slate-200 bg-white hover:border-cyan-400 hover:shadow-md"
+    )}>
+      <Icon className={cn("h-7 w-7", isBrand ? "text-white" : "text-cyan-600")} aria-hidden />
+      <h3 className={cn("text-lg font-bold", isBrand ? "text-white" : "text-slate-900")}>
+        {title}
+      </h3>
+      <p className={cn("flex-1 text-sm", isBrand ? "text-white/85" : "text-slate-600")}>
+        {body}
+      </p>
+      <span className={cn(
+        "inline-flex items-center gap-2 text-sm font-semibold",
+        isBrand ? "text-white" : "text-cyan-600"
+      )}>
         {cta} <ArrowRight className="h-4 w-4" />
       </span>
     </div>

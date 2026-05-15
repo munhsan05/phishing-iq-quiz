@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ConfettiLauncher } from "@/components/confetti-launcher";
 import { PostTestButton } from "@/components/post-test-button";
+import { ScoreDisplay } from "@/components/score-display";
 import { getTestWithDetails } from "@/db/queries";
 import { AGE_GROUP_ICONS, AGE_GROUP_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -62,10 +63,10 @@ export default async function ResultPage({ params }: PageProps) {
   return (
     <>
       <ConfettiLauncher shouldFire={pct >= 70} />
-      <main id="main-content" className="relative z-10 flex flex-1 flex-col items-center px-4 py-10 sm:px-6 sm:py-14">
-        <div className="w-full max-w-3xl space-y-6">
+      <main id="main-content" className="mx-auto max-w-5xl relative z-10 flex flex-1 flex-col items-center px-4 py-10 md:py-16 sm:px-6">
+        <div className="w-full max-w-5xl space-y-8">
           {/* Hero card */}
-          <Card className="bg-[var(--color-navy-2)] ring-1 ring-[var(--color-border-1)] p-6 sm:p-8">
+          <Card className="bg-white border border-slate-200 shadow-sm p-6 sm:p-8">
             <div className="flex flex-col items-center text-center">
               <div className="mb-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
                 ШУТИС · Туршилтын үр дүн
@@ -79,7 +80,7 @@ export default async function ResultPage({ params }: PageProps) {
               <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
                 <span>
                   <span aria-hidden="true">👤</span>{" "}
-                  <span className="font-semibold text-white">{user.name}</span>
+                  <span className="font-semibold text-slate-900">{user.name}</span>
                 </span>
                 <span>
                   <span aria-hidden="true">{AGE_GROUP_ICONS[user.ageGroup]}</span>{" "}
@@ -87,7 +88,7 @@ export default async function ResultPage({ params }: PageProps) {
                 </span>
                 <span>
                   <span aria-hidden="true">⏱</span> Нийт:{" "}
-                  <span className="font-mono text-white">
+                  <span className="font-mono text-slate-900">
                     {formatDuration(totalSeconds)}
                   </span>
                 </span>
@@ -95,23 +96,23 @@ export default async function ResultPage({ params }: PageProps) {
 
               {/* Score ring — big percent */}
               <div className="mt-8 flex flex-col items-center">
-                <div className="font-mono text-6xl font-extrabold text-white sm:text-7xl">
+                <div className="font-mono text-6xl font-extrabold text-slate-900 sm:text-7xl">
                   {score}
                   <span className="text-[var(--color-text-2)]">/{total}</span>
                 </div>
                 <div className="mt-1 text-sm uppercase tracking-wider text-cyan">
-                  {pct}% зөв
+                  <ScoreDisplay value={pct} suffix="% зөв" />
                 </div>
               </div>
 
               {/* Test type indicator */}
               {test.testType === "pre" && (
-                <div className="mt-4 rounded-lg bg-blue-2/10 px-4 py-2 text-sm text-blue-2">
+                <div className="mt-4 rounded-lg bg-blue-50 border border-blue-200 px-4 py-2 text-sm text-blue-700">
                   📋 Энэ бол <strong>Pre-test</strong> үр дүн. Доорх тайлбар, зөвлөмжийг анхааралтай уншаад Post-test өгнө үү.
                 </div>
               )}
               {test.testType === "post" && (
-                <div className="mt-4 rounded-lg bg-emerald-500/10 px-4 py-2 text-sm text-emerald-400">
+                <div className="mt-4 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-2 text-sm text-emerald-700">
                   📊 <strong>Post-test</strong> дууслаа! Харьцуулалт харах товч дээр дарж сайжрал харна уу.
                 </div>
               )}
@@ -154,7 +155,7 @@ export default async function ResultPage({ params }: PageProps) {
           </div>
 
           {/* Detail panel */}
-          <Card className="bg-[var(--color-navy-2)] ring-1 ring-[var(--color-border-1)] p-5 sm:p-6">
+          <Card className="bg-white border border-slate-200 shadow-sm p-5 sm:p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
                 {/* ТУРШИЛТЫН ДЭЛГЭРЭНГҮЙ ҮР ДҮН */}
@@ -179,10 +180,10 @@ export default async function ResultPage({ params }: PageProps) {
                   <li
                     key={a.id}
                     className={cn(
-                      "rounded-xl border p-4",
+                      "rounded-xl border px-4 py-4 md:px-6 md:py-5",
                       a.isCorrect
-                        ? "border-[rgba(0,229,160,.25)] bg-[rgba(0,229,160,.05)]"
-                        : "border-[rgba(255,61,90,.25)] bg-[rgba(255,61,90,.05)]",
+                        ? "border-emerald-200 bg-emerald-50"
+                        : "border-red-200 bg-red-50",
                     )}
                   >
                     {/* Header row */}
@@ -198,7 +199,7 @@ export default async function ResultPage({ params }: PageProps) {
                           {a.isCorrect ? "✅" : "❌"}
                         </span>
                         <div className="min-w-0">
-                          <div className="truncate text-sm font-semibold text-white">
+                          <div className="truncate text-sm font-semibold text-slate-900">
                             {q.emailSubject}
                           </div>
                           <div className="truncate font-mono text-xs text-muted-foreground">
@@ -213,7 +214,7 @@ export default async function ResultPage({ params }: PageProps) {
 
                     {/* Answer comparison */}
                     <div className="mb-3 grid grid-cols-2 gap-2 text-xs">
-                      <div className="rounded-lg bg-[var(--color-surface-1)] px-3 py-2">
+                      <div className="rounded-lg bg-slate-100 px-3 py-2">
                         <div className="mb-0.5 text-[0.65rem] uppercase tracking-wider text-muted-foreground">
                           Таны хариулт
                         </div>
@@ -228,7 +229,7 @@ export default async function ResultPage({ params }: PageProps) {
                           {chosenLabel}
                         </div>
                       </div>
-                      <div className="rounded-lg bg-[var(--color-surface-1)] px-3 py-2">
+                      <div className="rounded-lg bg-slate-100 px-3 py-2">
                         <div className="mb-0.5 text-[0.65rem] uppercase tracking-wider text-muted-foreground">
                           Зөв хариулт
                         </div>
@@ -351,7 +352,7 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="rounded-xl border border-[var(--color-border-1)] bg-[var(--color-navy-2)] px-4 py-3 text-center">
+    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-center shadow-sm">
       <div className={cn("font-mono text-2xl font-bold", color)}>{value}</div>
       <div className="mt-1 text-[0.68rem] uppercase tracking-wider text-muted-foreground">
         {label}

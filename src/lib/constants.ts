@@ -53,13 +53,14 @@ export const QUIZ_TIME_PER_QUESTION_SEC = 60;
 
 /**
  * Number of questions per test for each age group.
- * Matches the current seed data in `src/db/seed.ts`:
- * 6-18 → 10, 18-35 → 15, 35-60+ → 16.
+ * Standardized to 15 questions per group (defense V.2026).
+ * Note: 6-18 has only 10 in DB currently — extra questions can be added
+ * to src/db/seed.ts later. The query returns up to N available.
  */
 export const QUESTIONS_PER_TEST_BY_AGE: Record<AgeGroup, number> = {
-  "6-18": 10,
+  "6-18": 15,
   "18-35": 15,
-  "35-60+": 16,
+  "35-60+": 15,
 };
 
 // ============================================

@@ -6,8 +6,6 @@ import { useState, useEffect, useTransition, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { AgeGroupSelector } from "@/components/age-group-selector";
-import { HomeCtaSplit } from "@/components/home-cta-split";
-import { SafetyTipsGrid } from "@/components/safety-tips-grid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,7 +30,6 @@ export default function Home() {
   const [name, setName] = useState("");
   const [submittedName, setSubmittedName] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [showAgeSelector, setShowAgeSelector] = useState(false);
 
   // Experiment state: if the user completed a pre-test, this is set.
   const [experimentState, setExperimentState] = useState<{
@@ -153,8 +150,8 @@ export default function Home() {
   }
 
   return (
-    <main id="main-content" className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-16">
-      <div className="w-full max-w-3xl">
+    <main id="main-content" className="relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-6 py-10 md:py-16">
+      <div className="w-full max-w-5xl">
         {/* Academic header */}
         <div className="mb-6 text-center text-xs uppercase tracking-[0.2em] text-muted-foreground">
           ШУТИС · Кибер аюулгүй байдлын тэнхим · 2026
@@ -162,7 +159,7 @@ export default function Home() {
 
         {/* Hero */}
         <div className="text-center">
-          <h1 className="font-sans text-4xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl md:text-6xl">
+          <h1 className="font-sans text-3xl font-extrabold leading-tight tracking-tight text-slate-900 md:text-4xl lg:text-5xl">
             Фишинг
             <br />
             Илрүүлэх
@@ -179,7 +176,7 @@ export default function Home() {
         {/* Stats */}
         <div className="mx-auto mt-8 flex max-w-lg items-center justify-center gap-6 text-center">
           <div>
-            <div className="font-mono text-2xl font-bold text-white">
+            <div className="font-mono text-2xl font-bold text-slate-900">
               3<span className="ml-1 text-sm text-cyan">бүлэг</span>
             </div>
             <div className="mt-1 text-[0.65rem] uppercase tracking-wider text-muted-foreground">
@@ -188,7 +185,7 @@ export default function Home() {
           </div>
           <div className="h-8 w-px bg-border" aria-hidden="true" />
           <div>
-            <div className="font-mono text-2xl font-bold text-white">
+            <div className="font-mono text-2xl font-bold text-slate-900">
               30<span className="text-cyan">+</span>
             </div>
             <div className="mt-1 text-[0.65rem] uppercase tracking-wider text-muted-foreground">
@@ -197,7 +194,7 @@ export default function Home() {
           </div>
           <div className="h-8 w-px bg-border" aria-hidden="true" />
           <div>
-            <div className="font-mono text-2xl font-bold text-white">10</div>
+            <div className="font-mono text-2xl font-bold text-slate-900">10</div>
             <div className="mt-1 text-[0.65rem] uppercase tracking-wider text-muted-foreground">
               Асуулт · 30 сек
             </div>
@@ -208,10 +205,10 @@ export default function Home() {
         <div className="mx-auto mt-10 w-full max-w-xl rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-md sm:p-8">
           {experimentState ? (
             <div className="flex flex-col gap-5">
-              <div className="rounded-lg border border-border/60 bg-white/[0.03] px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">
-                📋 <strong className="text-white">Post-test</strong>
+              <div className="rounded-lg border border-slate-200 bg-slate-100 px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">
+                📋 <strong className="text-slate-900">Post-test</strong>
               </div>
-              <div className="text-base text-white">
+              <div className="text-base text-slate-900">
                 Сайн байна уу,{" "}
                 <span className="font-semibold text-cyan">
                   {experimentState.name}
@@ -234,15 +231,15 @@ export default function Home() {
               <button
                 type="button"
                 onClick={handleResetExperiment}
-                className="text-center text-xs text-muted-foreground hover:text-white"
+                className="text-center text-xs text-muted-foreground hover:text-slate-900"
               >
                 Шинэ туршилт эхлүүлэх
               </button>
             </div>
           ) : !submittedName ? (
             <form onSubmit={handleNameSubmit} className="flex flex-col gap-4">
-              <div className="mb-2 rounded-lg border border-border/60 bg-white/[0.03] px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">
-                📋 <strong className="text-white">Нэвтрэх</strong>
+              <div className="mb-2 rounded-lg border border-slate-200 bg-slate-100 px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">
+                📋 <strong className="text-slate-900">Нэвтрэх</strong>
               </div>
               <Label
                 htmlFor="username-input"
@@ -275,12 +272,12 @@ export default function Home() {
                 <span>🔒 Дахин өгөх</span>
               </div>
             </form>
-          ) : showAgeSelector ? (
+          ) : (
             <div className="flex flex-col gap-5">
               <button
                 type="button"
-                onClick={() => setShowAgeSelector(false)}
-                className="self-start text-xs uppercase tracking-wider text-muted-foreground hover:text-white"
+                onClick={() => setSubmittedName(null)}
+                className="self-start text-xs uppercase tracking-wider text-muted-foreground hover:text-slate-900"
                 disabled={isPending}
               >
                 ← Буцах
@@ -288,7 +285,7 @@ export default function Home() {
               <div className="text-xs uppercase tracking-wider text-muted-foreground">
                 <span aria-hidden="true">🎂</span> Насны бүлэг
               </div>
-              <div className="text-base text-white">
+              <div className="text-base text-slate-900">
                 Сайн байна уу,{" "}
                 <span className="font-semibold text-cyan">
                   {submittedName}
@@ -305,31 +302,14 @@ export default function Home() {
                 </div>
               ) : null}
             </div>
-          ) : (
-            <HomeCtaSplit
-              quizHref="#"
-              onQuizClick={() => setShowAgeSelector(true)}
-            />
           )}
         </div>
 
-        {/* CTA split — shown below login card when name not yet submitted */}
-        {!experimentState && !submittedName && (
-          <div className="mx-auto mt-6 w-full max-w-xl">
-            <HomeCtaSplit quizHref="#" quizDisabled onQuizClick={() => {}} />
-          </div>
-        )}
-
-        {/* Safety tips — always visible */}
-        <div className="mt-10">
-          <SafetyTipsGrid />
-        </div>
-
         {/* Leaderboard link */}
-        <div className="mt-8 text-center">
+        <div className="mt-12 text-center">
           <Link
             href="/leaderboard"
-            className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-5 py-2 text-sm text-muted-foreground backdrop-blur transition-colors hover:border-accent/60 hover:text-white"
+            className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-5 py-2 text-sm text-muted-foreground backdrop-blur transition-colors hover:border-accent/60 hover:text-slate-900"
           >
             <span aria-hidden="true">👑</span> Топ оноо
           </Link>

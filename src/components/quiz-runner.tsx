@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { AnswerFlash } from "@/components/answer-flash";
 import { GmailFrame } from "@/components/gmail-frame";
 import { QuestionTimer } from "@/components/question-timer";
 import { submitAnswer, finishQuiz } from "@/app/actions/quiz";
@@ -36,6 +37,10 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
   const [feedback, setFeedback] = useState<AnswerFeedback | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
+
+  // Answer flash overlay
+  const [flashTrigger, setFlashTrigger] = useState(0);
+  const [flashVerdict, setFlashVerdict] = useState<"correct" | "wrong" | "timeout" | null>(null);
 
   // Per-question start time (for `timeTakenMs`).
   const [questionStartedAt, setQuestionStartedAt] = useState<number>(() =>
@@ -74,6 +79,11 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
         setFeedback(fb);
         if (fb.isCorrect) setScore((s) => s + 1);
         setPhase("feedback");
+
+        // Trigger flash overlay
+        const verdict = selectedIsPhish === null ? "timeout" : fb.isCorrect ? "correct" : "wrong";
+        setFlashVerdict(verdict);
+        setFlashTrigger((t) => t + 1);
       } catch (err) {
         console.error(err);
         toast.error(
@@ -149,14 +159,15 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
   if (!current) return null;
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
+      <AnswerFlash trigger={flashTrigger} verdict={flashVerdict} />
       {/* Header: progress + score */}
       <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-card/60 px-3 py-3 backdrop-blur sm:px-5 sm:py-4">
         <div className="flex flex-col gap-1">
           <span className="text-xs uppercase tracking-wider text-muted-foreground">
             Насны бүлэг {ageGroup}
           </span>
-          <span className="font-mono text-base font-bold text-white sm:text-lg">
+          <span className="font-mono text-base font-bold text-slate-900 sm:text-lg">
             Асуулт {currentIndex + 1}/{total}
           </span>
         </div>
@@ -180,9 +191,9 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
           paused={phase !== "question"}
         />
         {/* Progress bar across questions */}
-        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
+        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-200">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-blue to-cyan transition-all duration-300"
+            className="h-full rounded-full bg-cyan-500 transition-all duration-300"
             style={{
               width: `${(((currentIndex + (phase === "feedback" ? 1 : 0)) / total) * 100).toFixed(2)}%`,
             }}
@@ -191,8 +202,10 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
         </div>
       </div>
 
-      {/* Gmail email frame */}
-      <GmailFrame question={current} />
+      {/* Gmail email frame — horizontal scroll on mobile for sidebar layout */}
+      <div className="overflow-x-auto md:overflow-x-visible">
+        <GmailFrame question={current} />
+      </div>
 
       {/* Feedback panel — shown after the user answers */}
       {phase === "feedback" && feedback ? (
@@ -235,7 +248,7 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
               variant="destructive"
               disabled={isSubmitting}
               onClick={() => handleAnswer(true)}
-              className="h-14 flex-1 text-base font-semibold"
+              className="h-14 flex-1 text-base font-semibold transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
               aria-keyshortcuts="P"
             >
               ⚠️ Фишинг
@@ -248,7 +261,7 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
               size="lg"
               disabled={isSubmitting}
               onClick={() => handleAnswer(false)}
-              className="h-14 flex-1 bg-emerald-600 text-base font-semibold text-white hover:bg-emerald-700"
+              className="h-14 flex-1 bg-emerald-600 text-base font-semibold text-white transition-all duration-200 hover:scale-[1.02] hover:bg-emerald-700 hover:shadow-md active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
               aria-keyshortcuts="L"
             >
               ✅ Жинхэнэ
@@ -277,15 +290,15 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
       {/* Keyboard hint */}
       <div className="text-center text-xs text-muted-foreground" aria-hidden="true">
         Гарын товчлол:{" "}
-        <kbd className="rounded border border-border bg-white/5 px-1.5 py-0.5 font-mono text-[0.65rem]">
+        <kbd className="rounded border border-border bg-slate-100 px-1.5 py-0.5 font-mono text-[0.65rem]">
           P
         </kbd>{" "}
         — Фишинг,{" "}
-        <kbd className="rounded border border-border bg-white/5 px-1.5 py-0.5 font-mono text-[0.65rem]">
+        <kbd className="rounded border border-border bg-slate-100 px-1.5 py-0.5 font-mono text-[0.65rem]">
           L
         </kbd>{" "}
         — Жинхэнэ,{" "}
-        <kbd className="rounded border border-border bg-white/5 px-1.5 py-0.5 font-mono text-[0.65rem]">
+        <kbd className="rounded border border-border bg-slate-100 px-1.5 py-0.5 font-mono text-[0.65rem]">
           Enter
         </kbd>{" "}
         — Дараагийн
