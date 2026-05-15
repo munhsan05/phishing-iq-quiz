@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { Sora, JetBrains_Mono } from "next/font/google";
+import { Roboto, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { CanvasBackground } from "@/components/canvas-background";
 import { Toaster } from "@/components/ui/sonner";
 
 // Sora — primary UI font, matches legacy index.html.
 // Mapped to --font-sans so shadcn/ui components inherit it.
-const sora = Sora({
+const sora = Roboto({
   variable: "--font-sans",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "700"],
   display: "swap",
 });
 
