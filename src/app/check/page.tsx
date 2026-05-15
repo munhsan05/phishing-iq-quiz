@@ -25,7 +25,7 @@ export default function CheckPage() {
         </p>
       </header>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 md:p-8">
         <AIEmailCheckForm />
       </div>
 

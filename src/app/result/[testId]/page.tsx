@@ -180,7 +180,7 @@ export default async function ResultPage({ params }: PageProps) {
                   <li
                     key={a.id}
                     className={cn(
-                      "rounded-xl border px-6 py-5",
+                      "rounded-xl border px-4 py-4 md:px-6 md:py-5",
                       a.isCorrect
                         ? "border-emerald-200 bg-emerald-50"
                         : "border-red-200 bg-red-50",

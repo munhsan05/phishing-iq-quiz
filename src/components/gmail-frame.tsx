@@ -91,21 +91,21 @@ export function GmailFrame({ question }: GmailFrameProps) {
       aria-label={`Имэйл: ${senderName} — ${question.emailSubject}`}
     >
       {/* === Top header (Gmail chrome) === */}
-      <div className="flex items-center gap-3 border-b border-[#dadce0] bg-white px-4 py-2">
-        <Menu className="size-5 text-[#5f6368]" aria-hidden />
+      <div className="flex items-center gap-2 border-b border-[#dadce0] bg-white px-3 py-2 sm:gap-3 sm:px-4">
+        <Menu className="size-5 shrink-0 text-[#5f6368]" aria-hidden />
         <div className="flex items-center gap-1">
           <span className="select-none text-[22px] font-medium leading-none tracking-tight text-[#c5221f]">
             Gmail
           </span>
         </div>
-        <div className="mx-3 flex h-12 flex-1 max-w-[720px] items-center gap-3 rounded-full bg-[#eaf1fb] px-5 text-[#5f6368]">
-          <Search className="size-5" aria-hidden />
-          <span className="text-sm">Цахим шуудан хайх</span>
+        <div className="mx-1 flex h-10 flex-1 items-center gap-2 rounded-full bg-[#eaf1fb] px-3 text-[#5f6368] sm:mx-3 sm:h-12 sm:max-w-[720px] sm:px-5">
+          <Search className="size-4 shrink-0 sm:size-5" aria-hidden />
+          <span className="hidden text-sm sm:inline">Цахим шуудан хайх</span>
         </div>
-        <Settings className="size-5 text-[#5f6368]" aria-hidden />
-        <Grip className="size-5 text-[#5f6368]" aria-hidden />
+        <Settings className="hidden size-5 text-[#5f6368] sm:block" aria-hidden />
+        <Grip className="hidden size-5 text-[#5f6368] sm:block" aria-hidden />
         <div
-          className="flex size-8 items-center justify-center rounded-full text-sm font-medium text-white"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-medium text-white"
           style={{ backgroundColor: `hsl(${hue}, 60%, 50%)` }}
         >
           {initial}
@@ -153,7 +153,7 @@ export function GmailFrame({ question }: GmailFrameProps) {
         {/* Email reader */}
         <div className="min-w-0 flex-1">
           {/* Action toolbar */}
-          <div className="flex items-center gap-1 border-b border-[#f0f0f0] px-4 py-2 text-[#5f6368]">
+          <div className="flex items-center gap-1 overflow-x-auto border-b border-[#f0f0f0] px-4 py-2 text-[#5f6368]">
             <ArrowLeft className="size-5" aria-hidden />
             <span className="mx-1 h-5 w-px bg-[#dadce0]" />
             <Archive className="size-5" aria-hidden />
@@ -210,7 +210,7 @@ export function GmailFrame({ question }: GmailFrameProps) {
           </div>
 
           {/* Body */}
-          <div className="whitespace-pre-wrap px-6 pb-4 text-[14px] leading-[1.65] text-[#202124]">
+          <div className="whitespace-pre-wrap px-4 pb-4 text-[13px] leading-[1.65] text-[#202124] md:px-6 md:text-[14px]">
             {main}
             {signature && (
               <div className="mt-4 border-t border-[#f0f0f0] pt-3 text-[#5f6368]">

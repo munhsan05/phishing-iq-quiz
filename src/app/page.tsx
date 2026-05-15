@@ -159,7 +159,7 @@ export default function Home() {
 
         {/* Hero */}
         <div className="text-center">
-          <h1 className="font-sans text-4xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-5xl md:text-6xl">
+          <h1 className="font-sans text-3xl font-extrabold leading-tight tracking-tight text-slate-900 md:text-4xl lg:text-5xl">
             Фишинг
             <br />
             Илрүүлэх

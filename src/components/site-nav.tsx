@@ -12,8 +12,8 @@ export function SiteNav() {
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/85 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 text-slate-900">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-sm">
+        <Link href="/" className="group flex items-center gap-2 text-slate-900 transition">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-sm transition-transform duration-300 group-hover:rotate-3 group-hover:scale-110">
             <ShieldCheck className="size-5" aria-hidden />
           </span>
           <span className="text-base font-semibold tracking-tight">
