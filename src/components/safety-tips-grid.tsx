@@ -64,7 +64,7 @@ export function SafetyTipsGrid() {
           return (
             <div
               key={tip.title}
-              className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+              className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-cyan-300 hover:shadow-md"
             >
               <Icon className="mb-2 h-5 w-5 text-cyan-600" aria-hidden />
               <h3 className="mb-1 text-sm font-semibold text-slate-900">
