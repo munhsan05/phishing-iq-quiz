@@ -1,17 +1,29 @@
 "use client";
 
 import {
+  Menu,
+  Search,
+  Settings,
+  Grip,
+  PenSquare,
+  Inbox,
+  Star,
+  Clock,
+  Send,
+  FileText,
+  ShoppingBag,
+  Plane,
+  ChevronDown,
   ArrowLeft,
   Archive,
   CircleAlert,
   Trash2,
   MailQuestion,
-  Clock,
+  Clock as ClockIcon,
   Folder,
   Tag,
   MoreVertical,
-  Star,
-  ChevronDown,
+  Star as StarIcon,
   CornerUpLeft,
   CornerDownLeft,
 } from "lucide-react";
@@ -36,11 +48,7 @@ function parseSender(raw: string): { name: string; email: string } {
   return { name: raw, email: raw };
 }
 
-/** Splits body into main + signature on a "---" or "—" line. */
-function splitSignature(body: string): {
-  main: string;
-  signature: string | null;
-} {
+function splitSignature(body: string): { main: string; signature: string | null } {
   const sigPattern = /\n[—-]{2,}\n/;
   const idx = body.search(sigPattern);
   if (idx === -1) return { main: body, signature: null };
@@ -50,116 +58,196 @@ function splitSignature(body: string): {
   };
 }
 
-/** Authentic Gmail web message reader frame — no sidebar or top header. */
+type NavItem = {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  count?: number;
+  active?: boolean;
+};
+
+const NAV_ITEMS: NavItem[] = [
+  { icon: Inbox, label: "Ирсэн имэйл", count: 1, active: true },
+  { icon: Star, label: "Одтой" },
+  { icon: Clock, label: "Түр хойшлуулсан" },
+  { icon: Send, label: "Илгээсэн" },
+  { icon: FileText, label: "Ноорог" },
+  { icon: ShoppingBag, label: "Худалдан авалтууд" },
+  { icon: Plane, label: "Аялал" },
+  { icon: ChevronDown, label: "Илүүг" },
+];
+
 export function GmailFrame({ question }: GmailFrameProps) {
-  const { name: senderName, email: senderEmail } = parseSender(
-    question.emailFrom,
-  );
+  const { name: senderName, email: senderEmail } = parseSender(question.emailFrom);
   const initial = senderName.charAt(0).toUpperCase();
-  const hue =
-    senderEmail
-      .split("")
-      .reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
+  const hue = senderEmail
+    .split("")
+    .reduce((acc, c) => acc + c.charCodeAt(0), 0) % 360;
   const { main, signature } = splitSignature(question.emailBody);
 
   return (
     <article
-      className="overflow-hidden rounded-lg border border-[#dadce0] bg-white shadow-sm"
+      className="overflow-hidden rounded-xl border border-[#dadce0] bg-white shadow-lg"
       role="article"
       aria-label={`Имэйл: ${senderName} — ${question.emailSubject}`}
     >
-      {/* Action toolbar */}
-      <div className="flex items-center gap-2 border-b border-[#f0f0f0] px-4 py-2 text-[#5f6368]">
-        <ArrowLeft className="size-5" aria-hidden />
-        <span className="mx-1 h-5 w-px bg-[#dadce0]" />
-        <Archive className="size-5" aria-hidden />
-        <CircleAlert className="size-5" aria-hidden />
-        <Trash2 className="size-5" aria-hidden />
-        <span className="mx-1 h-5 w-px bg-[#dadce0]" />
-        <MailQuestion className="size-5" aria-hidden />
-        <Clock className="size-5" aria-hidden />
-        <Folder className="size-5" aria-hidden />
-        <Tag className="size-5" aria-hidden />
-        <MoreVertical className="ml-auto size-5" aria-hidden />
-      </div>
-
-      {/* Subject + label */}
-      <div className="border-b border-[#f0f0f0] px-5 py-4">
-        <h2 className="text-xl font-normal leading-snug text-[#202124]">
-          {question.emailSubject}
-          <span className="ml-2 rounded bg-[#e8eaed] px-2 py-0.5 align-middle text-xs font-medium text-[#5f6368]">
-            Inbox
+      {/* === Top header (Gmail chrome) === */}
+      <div className="flex items-center gap-3 border-b border-[#dadce0] bg-white px-4 py-2">
+        <Menu className="size-5 text-[#5f6368]" aria-hidden />
+        <div className="flex items-center gap-1">
+          <span className="select-none text-[22px] font-medium leading-none tracking-tight text-[#c5221f]">
+            Gmail
           </span>
-        </h2>
-      </div>
-
-      {/* Sender block */}
-      <div className="flex items-start gap-3 px-5 py-3">
+        </div>
+        <div className="mx-3 flex h-12 flex-1 max-w-[720px] items-center gap-3 rounded-full bg-[#eaf1fb] px-5 text-[#5f6368]">
+          <Search className="size-5" aria-hidden />
+          <span className="text-sm">Цахим шуудан хайх</span>
+        </div>
+        <Settings className="size-5 text-[#5f6368]" aria-hidden />
+        <Grip className="size-5 text-[#5f6368]" aria-hidden />
         <div
-          className="flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-medium text-white"
+          className="flex size-8 items-center justify-center rounded-full text-sm font-medium text-white"
           style={{ backgroundColor: `hsl(${hue}, 60%, 50%)` }}
         >
           {initial}
         </div>
+      </div>
+
+      {/* === Two-column layout: sidebar + email reader === */}
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="hidden w-[212px] shrink-0 border-r border-[#dadce0] py-2 md:block">
+          {/* Compose button */}
+          <div className="px-3 pb-2">
+            <button
+              type="button"
+              className="flex items-center gap-3 rounded-2xl bg-[#c2e7ff] px-4 py-3 text-sm font-medium text-[#001d35] shadow-sm hover:bg-[#b3deff]"
+            >
+              <PenSquare className="size-5" aria-hidden />
+              Имэйл бичих
+            </button>
+          </div>
+          {/* Nav items */}
+          <nav className="space-y-0.5 px-1 text-[14px]">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.label}
+                  className={`flex items-center gap-3 rounded-r-full px-4 py-1.5 ${
+                    item.active
+                      ? "bg-[#d3e3fd] font-medium text-[#001d35]"
+                      : "text-[#444746] hover:bg-[#ebebeb]"
+                  }`}
+                >
+                  <Icon className="size-5 shrink-0" aria-hidden />
+                  <span className="flex-1">{item.label}</span>
+                  {item.count !== undefined && (
+                    <span className="text-xs font-medium">{item.count}</span>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* Email reader */}
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-1.5">
-            <span className="text-[14px] font-medium text-[#202124]">
-              {senderName}
+          {/* Action toolbar */}
+          <div className="flex items-center gap-1 border-b border-[#f0f0f0] px-4 py-2 text-[#5f6368]">
+            <ArrowLeft className="size-5" aria-hidden />
+            <span className="mx-1 h-5 w-px bg-[#dadce0]" />
+            <Archive className="size-5" aria-hidden />
+            <CircleAlert className="size-5" aria-hidden />
+            <Trash2 className="size-5" aria-hidden />
+            <span className="mx-1 h-5 w-px bg-[#dadce0]" />
+            <MailQuestion className="size-5" aria-hidden />
+            <ClockIcon className="size-5" aria-hidden />
+            <Folder className="size-5" aria-hidden />
+            <Tag className="size-5" aria-hidden />
+            <MoreVertical className="ml-auto size-5" aria-hidden />
+          </div>
+
+          {/* Subject + Inbox tag */}
+          <div className="flex items-center gap-3 border-b border-[#f0f0f0] px-6 py-4">
+            <h2 className="flex-1 text-[22px] font-normal leading-snug text-[#202124]">
+              {question.emailSubject}
+            </h2>
+            <span className="shrink-0 rounded bg-[#e8eaed] px-2 py-0.5 text-xs font-medium text-[#5f6368]">
+              Ирсэн имэйл
             </span>
-            <span className="text-[12px] text-[#5f6368]">
-              &lt;{senderEmail}&gt;
-            </span>
-            <span className="ml-auto text-[12px] text-[#5f6368]">10:23 AM</span>
           </div>
-          <div className="flex items-center gap-1 text-[12px] text-[#5f6368]">
-            <span>to me</span>
-            <ChevronDown className="size-3" aria-hidden />
+
+          {/* Sender block */}
+          <div className="flex items-start gap-3 px-6 py-4">
+            <div
+              className="flex size-10 shrink-0 items-center justify-center rounded-full text-base font-medium text-white"
+              style={{ backgroundColor: `hsl(${hue}, 60%, 50%)` }}
+            >
+              {initial}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-baseline gap-1.5">
+                <span className="text-[14px] font-medium text-[#202124]">
+                  {senderName}
+                </span>
+                <span className="text-[13px] text-[#5f6368]">
+                  &lt;{senderEmail}&gt;
+                </span>
+                <span className="ml-auto text-[12px] text-[#5f6368]">
+                  10:23 AM (4 минутын өмнө)
+                </span>
+              </div>
+              <div className="mt-0.5 flex items-center gap-1 text-[13px] text-[#5f6368]">
+                <span>над руу</span>
+                <ChevronDown className="size-3.5" aria-hidden />
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2 text-[#5f6368]">
+              <StarIcon className="size-5" aria-hidden />
+              <CornerUpLeft className="size-5" aria-hidden />
+              <MoreVertical className="size-5" aria-hidden />
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="whitespace-pre-wrap px-6 pb-4 text-[14px] leading-[1.65] text-[#202124]">
+            {main}
+            {signature && (
+              <div className="mt-4 border-t border-[#f0f0f0] pt-3 text-[#5f6368]">
+                {signature}
+              </div>
+            )}
+          </div>
+
+          {/* Optional URL */}
+          {question.emailUrl && (
+            <div className="px-6 pb-4">
+              <a
+                className="break-all text-[14px] text-[#1a73e8] underline decoration-[#1a73e8]/40 underline-offset-2"
+                href="#"
+                onClick={(e) => e.preventDefault()}
+              >
+                {question.emailUrl}
+              </a>
+            </div>
+          )}
+
+          {/* Reply chips */}
+          <div className="flex items-center gap-2 border-t border-[#f0f0f0] px-6 py-4">
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-full border border-[#dadce0] bg-white px-5 py-2 text-[14px] font-medium text-[#5f6368] hover:bg-[#f6f8fc]"
+            >
+              <CornerUpLeft className="size-4" /> Хариу бичих
+            </button>
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-full border border-[#dadce0] bg-white px-5 py-2 text-[14px] font-medium text-[#5f6368] hover:bg-[#f6f8fc]"
+            >
+              <CornerDownLeft className="size-4" /> Дамжуулах
+            </button>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1 text-[#5f6368]">
-          <Star className="size-5" aria-hidden />
-          <CornerUpLeft className="size-5" aria-hidden />
-          <MoreVertical className="size-5" aria-hidden />
-        </div>
-      </div>
-
-      {/* Body */}
-      <div className="whitespace-pre-wrap px-5 py-3 text-[14px] leading-[1.6] text-[#202124]">
-        {main}
-        {signature && (
-          <div className="mt-4 border-t border-[#f0f0f0] pt-3 text-[#5f6368]">
-            {signature}
-          </div>
-        )}
-      </div>
-
-      {/* URL field (if present) */}
-      {question.emailUrl && (
-        <div className="px-5 pb-3">
-          <a
-            className="break-all text-[14px] text-[#1a73e8] underline decoration-[#1a73e8]/40 underline-offset-2"
-            href="#"
-            onClick={(e) => e.preventDefault()}
-          >
-            {question.emailUrl}
-          </a>
-        </div>
-      )}
-
-      {/* Reply chips */}
-      <div className="flex items-center gap-2 border-t border-[#f0f0f0] px-5 py-3">
-        <button
-          type="button"
-          className="flex items-center gap-1.5 rounded-full border border-[#dadce0] px-4 py-1.5 text-[13px] text-[#5f6368] hover:bg-[#f6f8fc]"
-        >
-          <CornerUpLeft className="size-4" aria-hidden /> Хариулах
-        </button>
-        <button
-          type="button"
-          className="flex items-center gap-1.5 rounded-full border border-[#dadce0] px-4 py-1.5 text-[13px] text-[#5f6368] hover:bg-[#f6f8fc]"
-        >
-          <CornerDownLeft className="size-4" aria-hidden /> Дамжуулах
-        </button>
       </div>
     </article>
   );
