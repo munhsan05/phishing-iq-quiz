@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ConfettiLauncher } from "@/components/confetti-launcher";
 import { PostTestButton } from "@/components/post-test-button";
+import { ScoreDisplay } from "@/components/score-display";
 import { getTestWithDetails } from "@/db/queries";
 import { AGE_GROUP_ICONS, AGE_GROUP_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -100,7 +101,7 @@ export default async function ResultPage({ params }: PageProps) {
                   <span className="text-[var(--color-text-2)]">/{total}</span>
                 </div>
                 <div className="mt-1 text-sm uppercase tracking-wider text-cyan">
-                  {pct}% зөв
+                  <ScoreDisplay value={pct} suffix="% зөв" />
                 </div>
               </div>
 
