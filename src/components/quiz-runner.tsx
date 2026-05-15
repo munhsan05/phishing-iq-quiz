@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { AnswerFlash } from "@/components/answer-flash";
 import { GmailFrame } from "@/components/gmail-frame";
 import { QuestionTimer } from "@/components/question-timer";
 import { submitAnswer, finishQuiz } from "@/app/actions/quiz";
@@ -36,6 +37,10 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
   const [feedback, setFeedback] = useState<AnswerFeedback | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
+
+  // Answer flash overlay
+  const [flashTrigger, setFlashTrigger] = useState(0);
+  const [flashVerdict, setFlashVerdict] = useState<"correct" | "wrong" | "timeout" | null>(null);
 
   // Per-question start time (for `timeTakenMs`).
   const [questionStartedAt, setQuestionStartedAt] = useState<number>(() =>
@@ -74,6 +79,11 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
         setFeedback(fb);
         if (fb.isCorrect) setScore((s) => s + 1);
         setPhase("feedback");
+
+        // Trigger flash overlay
+        const verdict = selectedIsPhish === null ? "timeout" : fb.isCorrect ? "correct" : "wrong";
+        setFlashVerdict(verdict);
+        setFlashTrigger((t) => t + 1);
       } catch (err) {
         console.error(err);
         toast.error(
@@ -150,6 +160,7 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
+      <AnswerFlash trigger={flashTrigger} verdict={flashVerdict} />
       {/* Header: progress + score */}
       <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-card/60 px-3 py-3 backdrop-blur sm:px-5 sm:py-4">
         <div className="flex flex-col gap-1">
@@ -237,7 +248,7 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
               variant="destructive"
               disabled={isSubmitting}
               onClick={() => handleAnswer(true)}
-              className="h-14 flex-1 text-base font-semibold"
+              className="h-14 flex-1 text-base font-semibold transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
               aria-keyshortcuts="P"
             >
               ⚠️ Фишинг
@@ -250,7 +261,7 @@ export function QuizRunner({ testId, questions, ageGroup }: QuizRunnerProps) {
               size="lg"
               disabled={isSubmitting}
               onClick={() => handleAnswer(false)}
-              className="h-14 flex-1 bg-emerald-600 text-base font-semibold text-white hover:bg-emerald-700"
+              className="h-14 flex-1 bg-emerald-600 text-base font-semibold text-white transition-all duration-200 hover:scale-[1.02] hover:bg-emerald-700 hover:shadow-md active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2"
               aria-keyshortcuts="L"
             >
               ✅ Жинхэнэ

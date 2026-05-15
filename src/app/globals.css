@@ -242,3 +242,15 @@ main {
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================
+   ANSWER FLASH OVERLAY
+   ============================================ */
+@keyframes flash-fade {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.animate-flash-fade {
+  animation: flash-fade 700ms ease-out forwards;
+}
