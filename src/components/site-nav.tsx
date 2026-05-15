@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ShieldCheck, Home, Bot, Trophy } from "lucide-react";
+import { ShieldCheck, Home, Lightbulb, Bot, Trophy } from "lucide-react";
 
 const NAV_LINKS = [
   { href: "/", label: "Нүүр", icon: Home },
+  { href: "/tips", label: "Зөвлөмж", icon: Lightbulb },
   { href: "/check", label: "AI шалгах", icon: Bot },
   { href: "/leaderboard", label: "Тэргүүлэгчид", icon: Trophy },
 ];
