@@ -22,9 +22,9 @@ const VERDICT_ICON: Record<Verdict, React.ComponentType<{ className?: string }>>
 };
 
 const VERDICT_STYLE: Record<Verdict, string> = {
-  phishing: "bg-red-500/15 text-red-300 ring-red-500/30",
-  legitimate: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/30",
-  uncertain: "bg-amber-500/15 text-amber-300 ring-amber-500/30",
+  phishing: "bg-red-50 text-red-700 ring-red-200",
+  legitimate: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  uncertain: "bg-amber-50 text-amber-700 ring-amber-200",
 };
 
 export function VerdictBadge({ verdict, confidence, className }: Props) {
